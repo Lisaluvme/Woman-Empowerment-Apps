@@ -58,7 +58,15 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-slate-50 min-h-screen p-4 pb-20 font-sans safe-area">
+    <div className="max-w-md mx-auto bg-gradient-to-br from-primary-50 via-white to-primary-50 min-h-screen p-4 pb-20 font-sans safe-area relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary-200/30 rounded-full -translate-x-1/3 -translate-y-1/3 animate-pulse-slow"></div>
+        <div className="absolute top-20 right-0 w-48 h-48 bg-accent-200/20 rounded-full translate-x-1/3 -translate-y-1/3 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-1/4 w-32 h-32 bg-safety-200/20 rounded-full -translate-x-1/4 translate-y-1/4 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      <div className="relative z-10">
       {/* Header with Empowerment Counter */}
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-teal-800">Command Center</h1>
@@ -225,6 +233,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

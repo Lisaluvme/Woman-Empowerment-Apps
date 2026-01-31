@@ -64,7 +64,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-primary-900/80 via-black/80 to-safety-900/80 flex flex-col items-center justify-center p-4 z-50">
       {!capturedImage ? (
         <div className="relative w-full max-w-sm aspect-[3/4] bg-gray-900 rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
           {!isCameraOpen ? (

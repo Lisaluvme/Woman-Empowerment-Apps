@@ -45,7 +45,7 @@ const MainApp = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-50">
+    <div className="relative min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
       {/* Sidebar for larger screens */}
       <div className={`fixed left-0 top-0 h-full w-64 bg-white border-r border-slate-200 shadow-lg z-50 transform ${showSidebar ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto`}>
         <div className="p-4 border-b border-slate-200">

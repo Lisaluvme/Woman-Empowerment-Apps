@@ -1,6 +1,13 @@
 {
-  "short_name": "Empower",
   "name": "Women's Empowerment Command Center",
+  "short_name": "Empowerment App",
+  "description": "A comprehensive PWA for women's safety, document management, and personal growth tracking.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fdfa",
+  "theme_color": "#14b8a6",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "favicon.ico",
@@ -9,26 +16,95 @@
     },
     {
       "src": "icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#0d9488",
-  "background_color": "#f8fafc",
-  "description": "A comprehensive safety and empowerment app for women with document management, career tracking, and emergency features.",
-  "categories": ["productivity", "lifestyle", "health"],
+  "categories": ["productivity", "lifestyle", "health", "utilities"],
   "screenshots": [
     {
       "src": "screenshot1.png",
       "sizes": "1280x720",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Overview"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Document Scanner"
+    },
+    {
+      "src": "screenshot3.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Safety Features"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick SOS",
+      "short_name": "SOS",
+      "description": "Emergency safety features",
+      "url": "/",
+      "icons": [
+        {
+          "src": "sos-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Document Scanner",
+      "short_name": "Scanner",
+      "description": "Scan and save documents",
+      "url": "/",
+      "icons": [
+        {
+          "src": "scanner-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
