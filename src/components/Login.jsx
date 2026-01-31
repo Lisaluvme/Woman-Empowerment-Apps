@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase-config';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, User, Heart, Sparkles, Shield, ArrowRight, Chrome, Facebook, Smartphone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ChevronRight, Sparkles } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,18 +13,9 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotMessage, setForgotMessage] = useState('');
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   const navigate = useNavigate();
-
-  // Floating animation effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 2000);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -68,291 +59,240 @@ const Login = () => {
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    // Placeholder for social login implementation
-    console.log(`Social login with ${provider}`);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Enhanced Background with Animated Elements */}
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden bg-gradient-to-br from-slate-50 via-rose-50/30 to-purple-50/30">
+      {/* Modern abstract background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Floating abstract shapes with enhanced animation */}
-        <div className={`absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-rose-200/60 to-pink-200/60 rounded-full blur-3xl transition-all duration-3000 ${isAnimating ? 'scale-110 opacity-70' : 'scale-100 opacity-60'}`} style={{ animationDelay: '0s' }}></div>
-        <div className={`absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-br from-orange-200/50 to-rose-200/50 rounded-full blur-3xl transition-all duration-3000 ${isAnimating ? 'scale-110 opacity-60' : 'scale-100 opacity-50'}`} style={{ animationDelay: '2s' }}></div>
-        <div className={`absolute bottom-0 left-1/3 w-80 h-80 bg-gradient-to-br from-pink-200/40 to-orange-200/40 rounded-full blur-3xl transition-all duration-3000 ${isAnimating ? 'scale-110 opacity-50' : 'scale-100 opacity-40'}`} style={{ animationDelay: '4s' }}></div>
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-rose-400/20 to-purple-400/20 rounded-full blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-tr from-purple-400/15 to-pink-400/15 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[40%] left-[20%] w-[300px] h-[300px] bg-gradient-to-br from-pink-300/10 to-rose-300/10 rounded-full blur-[80px]" />
         
-        {/* Enhanced abstract female silhouette */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
-          <svg width="400" height="400" viewBox="0 0 400 400" fill="none" className="animate-pulse">
-            <path d="M200 80C240.89 80 274 105 274 135C274 165 240.89 190 200 190C159.11 190 126 165 126 135C126 105 159.11 80 200 80Z" fill="currentColor" />
-            <path d="M200 190C240.89 190 274 215 274 245C274 275 240.89 300 200 300C159.11 300 126 275 126 245C126 215 159.11 190 200 190Z" fill="currentColor" />
-            <path d="M160 200C160 200 175 225 200 225C225 225 240 200 240 200" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-            {/* Additional empowering elements */}
-            <circle cx="200" cy="135" r="8" fill="white" className="animate-pulse" />
-            <path d="M180 150L190 140L200 150L210 140L220 150" stroke="white" strokeWidth="3" strokeLinecap="round" className="animate-bounce" />
-          </svg>
-        </div>
-
-        {/* New: Floating hearts and sparkles */}
-        <div className="absolute inset-0">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-4 h-4 bg-rose-300 rounded-full opacity-60 animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${i * 0.5}s`,
-                animationDuration: '6s'
-              }}
-            />
-          ))}
-        </div>
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `
+            linear-gradient(to right, currentColor 1px, transparent 1px),
+            linear-gradient(to bottom, currentColor 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px'
+        }} />
       </div>
 
-      {/* Floating decorative elements with enhanced animation */}
-      <div className="absolute top-10 left-10 w-24 h-24 bg-gradient-to-br from-rose-200 to-pink-200 rounded-full opacity-60 animate-bounce shadow-lg" style={{ animationDelay: '0.5s' }}></div>
-      <div className="absolute top-20 right-10 w-20 h-20 bg-gradient-to-br from-orange-200 to-rose-200 rounded-full opacity-50 animate-bounce shadow-lg" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute bottom-20 left-20 w-28 h-28 bg-gradient-to-br from-pink-200 to-orange-200 rounded-full opacity-50 animate-bounce shadow-lg" style={{ animationDelay: '1.5s' }}></div>
-
       {/* Main Login Card */}
-      <div className="bg-white bg-opacity-98 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md relative z-10 border border-white/30 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-2">
-        {/* Header with Enhanced Logo */}
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-rose-500 via-pink-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-            <User className="w-10 h-10 text-white relative z-10 drop-shadow-lg" />
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-rose-600 via-pink-600 to-orange-600 bg-clip-text text-transparent mb-2 tracking-tight">
-            EmpowerHer
-          </h1>
-          <p className="text-gray-600 text-sm font-medium">Your journey to confidence begins here</p>
-        </div>
-
-        {/* Forgot Password Form */}
-        {showForgotPassword ? (
-          <form onSubmit={handleForgotPassword} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-rose-500" />
-                Email Address
-              </label>
-              <div className="relative group">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center group-focus-within:bg-gradient-to-br group-focus-within:from-rose-200 group-focus-within:to-pink-200 transition-colors duration-300">
-                  <Mail className="w-3 h-3 text-rose-500" />
-                </div>
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full pl-14 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-4 focus:ring-rose-100 focus:border-rose-400 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50 group-focus-within:bg-white group-focus-within:shadow-lg group-focus-within:shadow-rose-100"
-                  placeholder="your@email.com"
-                  required
-                />
+      <div className="relative z-10 w-full max-w-md">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-rose-900/5 border border-white/50 overflow-hidden">
+          {/* Top accent bar */}
+          <div className="h-1.5 bg-gradient-to-r from-rose-500 via-purple-500 to-pink-500" />
+          
+          <div className="p-8 sm:p-10">
+            {/* Header */}
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 mb-5 bg-gradient-to-br from-rose-500 to-purple-600 rounded-2xl shadow-lg shadow-rose-500/30 transform hover:scale-105 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                </svg>
               </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+                Welcome back
+              </h1>
+              <p className="text-gray-500 text-sm">
+                Sign in to continue your empowerment journey
+              </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-slide-down">
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                  {error}
+                </p>
+              </div>
+            )}
 
             {forgotMessage && (
-              <div className={`p-4 rounded-xl text-sm border-2 ${
-                forgotMessage.includes('Error') 
-                  ? 'bg-red-50 text-red-600 border-red-200' 
-                  : 'bg-green-50 text-green-600 border-green-200'
-              }`}>
-                <div className="flex items-center gap-2">
-                  {forgotMessage.includes('Error') ? (
-                    <AlertCircle className="w-4 h-4" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-green-500" />
-                  )}
-                  <span>{forgotMessage}</span>
-                </div>
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-slide-down">
+                <p className="text-sm text-green-600 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  {forgotMessage}
+                </p>
               </div>
             )}
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setForgotMessage('');
-                }}
-                className="flex-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-4 rounded-xl font-medium hover:from-gray-200 hover:to-gray-300 transition-all duration-300 transform hover:scale-105 active:scale-95"
-              >
-                ← Back to Login
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 text-white py-3 px-4 rounded-xl font-medium hover:from-rose-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white"></div>
-                    <span>Sending...</span>
+            {/* Forgot Password Form */}
+            {showForgotPassword ? (
+              <form onSubmit={handleForgotPassword} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      onFocus={() => setFocusedField('forgotEmail')}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border-2 rounded-xl transition-all duration-200 outline-none
+                        ${focusedField === 'forgotEmail' 
+                          ? 'border-rose-500 ring-4 ring-rose-500/10 bg-white' 
+                          : 'border-gray-200 hover:border-gray-300'
+                        }
+                      `}
+                      placeholder="Enter your email"
+                      required
+                    />
                   </div>
-                ) : (
-                  'Send Reset Email'
-                )}
-              </button>
-            </div>
-          </form>
-        ) : (
-          /* Login Form */
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-rose-500" />
-                Email Address
-              </label>
-              <div className="relative group">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center group-focus-within:bg-gradient-to-br group-focus-within:from-rose-200 group-focus-within:to-pink-200 transition-colors duration-300">
-                  <Mail className="w-3 h-3 text-rose-500" />
                 </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-14 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-4 focus:ring-rose-100 focus:border-rose-400 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50 group-focus-within:bg-white group-focus-within:shadow-lg group-focus-within:shadow-rose-100"
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-rose-500" />
-                Password
-              </label>
-              <div className="relative group">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center group-focus-within:bg-gradient-to-br group-focus-within:from-rose-200 group-focus-within:to-pink-200 transition-colors duration-300">
-                  <Lock className="w-3 h-3 text-rose-500" />
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotMessage('');
+                    }}
+                    className="flex-1 py-3.5 px-6 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-all duration-200"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 py-3.5 px-6 bg-gradient-to-r from-rose-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-rose-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
                 </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-14 pr-14 py-4 border border-gray-200 rounded-xl focus:ring-4 focus:ring-rose-100 focus:border-rose-400 transition-all duration-300 bg-gray-50/50 hover:bg-gray-50 group-focus-within:bg-white group-focus-within:shadow-lg group-focus-within:shadow-rose-100"
-                  placeholder="Enter your password"
-                  required
-                />
+              </form>
+            ) : (
+              /* Login Form */
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border-2 rounded-xl transition-all duration-200 outline-none
+                        ${focusedField === 'email' 
+                          ? 'border-rose-500 ring-4 ring-rose-500/10 bg-white' 
+                          : 'border-gray-200 hover:border-gray-300'
+                        }
+                      `}
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full pl-12 pr-14 py-3.5 bg-gray-50/50 border-2 rounded-xl transition-all duration-200 outline-none
+                        ${focusedField === 'password' 
+                          ? 'border-rose-500 ring-4 ring-rose-500/10 bg-white' 
+                          : 'border-gray-200 hover:border-gray-300'
+                        }
+                      `}
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-rose-400 hover:text-rose-600 transition-colors duration-300 group-hover:bg-rose-50 group-hover:rounded-full group-hover:p-1"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 via-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:shadow-xl hover:shadow-rose-500/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 group"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2.5 border-white/30 border-t-white" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </>
+                  )}
                 </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border-2 border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center gap-3">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
-                <span className="text-sm font-medium">{error}</span>
-              </div>
+              </form>
             )}
 
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-rose-500 hover:text-rose-700 font-medium transition-colors duration-300 flex items-center gap-1 group"
-              >
-                <Sparkles className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" />
-                Forgot Password?
-              </button>
-            </div>
-
-            {/* Social Login Buttons */}
-            <div className="space-y-3">
-              <div className="text-center text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Or continue with</div>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('google')}
-                  className="flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-700 py-2 px-3 rounded-xl hover:border-rose-300 hover:text-rose-600 transition-all duration-300 transform hover:scale-105 active:scale-95"
-                >
-                  <Chrome className="w-4 h-4" />
-                  <span className="text-xs">Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('facebook')}
-                  className="flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-700 py-2 px-3 rounded-xl hover:border-blue-300 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 active:scale-95"
-                >
-                  <Facebook className="w-4 h-4" />
-                  <span className="text-xs">Facebook</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSocialLogin('apple')}
-                  className="flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-700 py-2 px-3 rounded-xl hover:border-gray-400 hover:text-gray-800 transition-all duration-300 transform hover:scale-105 active:scale-95"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  <span className="text-xs">Apple</span>
-                </button>
+            {/* Divider */}
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white/80 backdrop-blur text-gray-500 font-medium">New here?</span>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 text-white py-4 px-6 rounded-xl font-semibold text-lg tracking-wide hover:from-rose-600 hover:via-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl hover:shadow-2xl hover:-translate-y-1"
+            {/* Sign Up Link */}
+            <Link
+              to="/register"
+              className="w-full py-4 px-6 bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-rose-300 hover:text-rose-700 hover:bg-rose-50/30 transition-all duration-200 flex items-center justify-center gap-2 group"
             >
-              {loading ? (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white"></div>
-                  <span>Signing In...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-                </div>
-              )}
-            </button>
-          </form>
-        )}
+              <span>Create an account</span>
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+            </Link>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 text-sm mb-3 font-medium">Don't have an account?</p>
-          <Link 
-            to="/register" 
-            className="inline-block bg-gradient-to-r from-rose-50 to-orange-50 text-rose-700 py-3 px-8 rounded-xl font-semibold hover:from-rose-100 hover:to-orange-100 transition-all duration-300 border border-rose-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-          >
-            Join Our Community
-          </Link>
-        </div>
-
-        {/* Enhanced Empowering Message */}
-        <div className="mt-8 p-4 bg-gradient-to-r from-rose-50/80 to-orange-50/80 border-2 border-rose-200/60 rounded-xl backdrop-blur-sm">
-          <div className="flex items-center justify-center gap-2">
-            <Heart className="w-4 h-4 text-rose-500 animate-pulse" />
-            <Sparkles className="w-4 h-4 text-orange-500" />
-            <Shield className="w-4 h-4 text-pink-500" />
+            {/* Trust Badge */}
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Secure login powered by industry-leading encryption
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-rose-700 text-center font-medium mt-2 leading-relaxed">
-            ✨ You are strong, capable, and worthy. Every step you take here makes you stronger. Welcome to your empowerment journey.
-          </p>
         </div>
 
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 rounded-3xl opacity-5 pointer-events-none">
-          <svg className="w-full h-full" viewBox="0 0 100 100">
-            <defs>
-              <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="10" cy="10" r="1" fill="#ff6b6b" />
-              </pattern>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" fill="url(#dots)" />
-          </svg>
-        </div>
+        {/* Footer Tagline */}
+        <p className="text-center text-xs text-gray-500 mt-6 font-medium">
+          Empowering women to achieve their full potential ✨
+        </p>
       </div>
     </div>
   );
