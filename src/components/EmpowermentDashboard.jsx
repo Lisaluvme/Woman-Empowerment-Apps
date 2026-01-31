@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, BookOpen, Target, Users, Camera, PlusCircle, Sparkles, Heart, Award, TrendingUp, Flame } from 'lucide-react';
+import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2 } from 'lucide-react';
 
 const EmpowermentDashboard = ({ onOpenScanner }) => {
-  // 1. State for Counter & Timer
-  const [empowermentPoints, setEmpowermentPoints] = useState(12);
-  const [timer, setTimer] = useState(3600);
+  // State
+  const [empowermentPoints, setEmpowermentPoints] = useState(1250);
+  const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [showPanicAlert, setShowPanicAlert] = useState(false);
-
-  // 2. Career Progress Data
+  const [showSOSAlert, setShowSOSAlert] = useState(false);
+  
+  // Career progress
   const careerGoal = { current: 7, target: 10 };
   const progressPercent = (careerGoal.current / careerGoal.target) * 100;
 
-  // 3. SOS Logic
+  // Timer countdown
+  useEffect(() => {
+    let interval = null;
+    if (isTimerActive && safetyTimer > 0) {
+      interval = setInterval(() => setSafetyTimer((t) => t - 1), 1000);
+    } else if (safetyTimer === 0) {
+      triggerSOS();
+      setIsTimerActive(false);
+      setShowSOSAlert(true);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerActive, safetyTimer]);
+
+  // SOS Trigger
   const triggerSOS = () => {
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
@@ -22,115 +35,103 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
     });
   };
 
-  // 4. Timer Effect
-  useEffect(() => {
-    let interval = null;
-    if (isTimerActive && timer > 0) {
-      interval = setInterval(() => setTimer((t) => t - 1), 1000);
-    } else if (timer === 0) {
-      triggerSOS();
-      setIsTimerActive(false);
-      setShowPanicAlert(true);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive, timer]);
-
-  const handlePanicButton = () => {
-    setShowPanicAlert(true);
-    triggerSOS();
-  };
-
+  // Timer actions
+  const handleStartTimer = () => setIsTimerActive(true);
+  const handleStopTimer = () => setIsTimerActive(false);
   const handleCheckIn = () => {
     setIsTimerActive(false);
-    setTimer(3600);
+    setSafetyTimer(3600);
   };
 
-  const handleStartTimer = () => {
-    setIsTimerActive(true);
-  };
-
-  const handleStopTimer = () => {
-    setIsTimerActive(false);
-  };
-
-  const handleAddPoint = () => {
-    setEmpowermentPoints(prev => prev + 1);
+  // Format timer display
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen p-4 pb-24 font-sans safe-area relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-rose-200/30 to-pink-200/30 rounded-full -translate-x-1/3 -translate-y-1/3 animate-pulse-slow"></div>
-        <div className="absolute top-20 right-0 w-72 h-72 bg-gradient-to-br from-orange-200/20 to-rose-200/20 rounded-full translate-x-1/3 -translate-y-1/3 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-20 left-1/4 w-64 h-64 bg-gradient-to-br from-pink-200/20 to-orange-200/20 rounded-full -translate-x-1/4 translate-y-1/4 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-      </div>
-      
-      <div className="relative z-10 fade-in-up">
-      {/* Header with Empowerment Counter */}
-      <header className="flex justify-between items-center mb-6">
+    <div className="px-4 py-4 max-w-lg mx-auto space-y-4">
+      {/* Welcome Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Command Center</h1>
-          <p className="text-sm text-gray-600 mt-1">Your empowerment journey</p>
+          <h2 className="text-2xl font-bold text-slate-900">Good evening</h2>
+          <p className="text-sm text-slate-500">Here's your overview for today</p>
         </div>
-        <div className="bg-gradient-to-r from-rose-100 to-orange-100 text-rose-700 px-4 py-2 rounded-2xl font-bold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-          <Sparkles size={18} className="animate-pulse" />
-          <span>{empowermentPoints} Points</span>
-        </div>
-      </header>
-
-      {/* SAFETY SECTION (SOS & Timer) */}
-      <section className="card-glass mb-6 border-2 border-rose-100 stagger-1 fade-in-up">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-            <ShieldAlert className="text-white" size={20} />
+        <div className="text-right">
+          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-xl">
+            <Plus className="w-4 h-4 text-emerald-600" />
+            <span className="text-lg font-bold text-emerald-700">{empowermentPoints}</span>
           </div>
-          <h2 className="font-bold text-xl text-gray-800">Safety Shield</h2>
+          <p className="text-xs text-slate-500 mt-1">Empowerment Points</p>
         </div>
-        
+      </div>
+
+      {/* SAFETY SECTION - CRITICAL & VISIBLE */}
+      <section className="card-elevated border-2 border-rose-200">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+            <Shield className="w-4 h-4 text-rose-600" />
+          </div>
+          <h3 className="font-semibold text-slate-900">Safety Shield</h3>
+        </div>
+
+        {/* SOS Panic Button - ALWAYS VISIBLE & PROMINENT */}
         <button 
-          onClick={handlePanicButton}
-          className="w-full bg-gradient-to-r from-rose-600 to-orange-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all duration-300 mb-4 hover:shadow-2xl hover:-translate-y-1 animate-pulse-glow"
+          onClick={triggerSOS}
+          className="sos-button w-full mb-4"
         >
-          <div className="flex items-center justify-center gap-3">
-            <Flame size={28} className="animate-pulse" />
-            <span>SOS PANIC BUTTON</span>
+          <div className="flex items-center justify-center gap-2">
+            <Shield size={24} />
+            <span className="text-lg">SOS PANIC BUTTON</span>
           </div>
         </button>
 
-        <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-xl border border-gray-200">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <ShieldAlert size={16} className="text-rose-500" />
-                Safety Timer
-              </span>
-              <span className="text-xs text-gray-500 mt-1">{Math.floor(timer / 60)}m {timer % 60}s remaining</span>
+        {/* Safety Timer */}
+        <div className="bg-slate-50 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-slate-500" />
+                Safety Check-in Timer
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {isTimerActive ? 'Timer active' : 'Timer inactive'}
+              </p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-rose-100 to-orange-100 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold gradient-text">
-                {Math.floor(timer / 60)}
-              </span>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-slate-900">
+                {formatTime(safetyTimer)}
+              </div>
             </div>
           </div>
+
           <div className="flex gap-2">
             <button 
               onClick={handleStartTimer}
               disabled={isTimerActive}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${isTimerActive ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg hover:shadow-xl'}`}
+              className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isTimerActive 
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
+              }`}
             >
               Start
             </button>
             <button 
               onClick={handleStopTimer}
               disabled={!isTimerActive}
-              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 ${!isTimerActive ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg hover:shadow-xl'}`}
+              className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                !isTimerActive 
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                  : 'bg-slate-700 text-white hover:bg-slate-800 active:scale-95'
+              }`}
             >
               Stop
             </button>
             <button 
               onClick={handleCheckIn}
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
+              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-teal-600 text-white hover:bg-teal-700 active:scale-95 transition-all duration-200"
             >
               Check-in
             </button>
@@ -138,171 +139,151 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         </div>
       </section>
 
-      {/* CAREER SECTION (Progress Tracker) */}
-      <section className="card-glass mb-6 stagger-2 fade-in-up">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Target className="text-white" size={20} />
+      {/* CAREER PROGRESS SECTION */}
+      <section className="card">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+            <Target className="w-4 h-4 text-emerald-600" />
           </div>
-          <div>
-            <h2 className="font-bold text-xl text-gray-800">Career Growth</h2>
-            <p className="text-xs text-gray-500">Track your progress</p>
-          </div>
+          <h3 className="font-semibold text-slate-900">Career Progress</h3>
         </div>
-        
-        <div className="bg-gradient-to-r from-teal-50 to-blue-50 p-4 rounded-xl border border-teal-100 mb-4">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-sm font-semibold text-gray-700">Monthly Skill Goal</p>
-              <p className="text-xs text-gray-500 mt-1">{careerGoal.current} of {careerGoal.target} completed</p>
+
+        <div className="space-y-4">
+          {/* Progress Card */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-medium text-slate-900">Monthly Skill Goal</p>
+                <p className="text-sm text-slate-600 mt-1">
+                  {careerGoal.current} of {careerGoal.target} skills completed
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-emerald-600">{progressPercent.toFixed(0)}%</p>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-500" />
+                  <span className="text-xs text-emerald-600">On track</span>
+                </div>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold gradient-text-secondary">{progressPercent.toFixed(0)}%</p>
-              <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-                <TrendingUp size={12} className="text-teal-500" />
-                On track
-              </p>
+
+            <div className="progress-bar">
+              <div 
+                className="progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              ></div>
             </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 h-3 rounded-full transition-all duration-700 shadow-lg" 
-              style={{ width: `${progressPercent}%` }}
-            ></div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => setEmpowermentPoints(p => p + 100)}
+              className="bg-white border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Progress
+            </button>
+            <button className="bg-white border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2">
+              <Target className="w-4 h-4" />
+              Update Goal
+            </button>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            onClick={handleAddPoint}
-            className="bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 py-3 px-4 rounded-xl font-semibold hover:from-teal-200 hover:to-cyan-200 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-          >
-            <PlusCircle size={18} />
-            Add Point
-          </button>
-          <button 
-            className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 py-3 px-4 rounded-xl font-semibold hover:from-blue-200 hover:to-indigo-200 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-          >
-            <Target size={18} />
-            Update Goal
-          </button>
         </div>
       </section>
 
-      {/* QUICK ACTIONS (Journal & Camera) */}
-      <div className="grid grid-cols-2 gap-4 mb-6 stagger-3 fade-in-up">
+      {/* QUICK ACTIONS */}
+      <div className="grid grid-cols-2 gap-3">
         <button 
-          onClick={handleAddPoint}
-          className="card-glass p-6 flex flex-col items-center gap-3 hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 group"
+          onClick={() => setEmpowermentPoints(p => p + 50)}
+          className="card-hover p-5 flex flex-col items-center gap-3"
         >
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-            <BookOpen className="text-white" size={28} />
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+            <BookOpen className="w-6 h-6 text-white" />
           </div>
           <div className="text-center">
-            <span className="font-bold text-sm text-gray-800 block">Journal</span>
-            <span className="text-xs text-gray-500">Track progress</span>
+            <span className="font-semibold text-slate-900 text-sm block">Journal</span>
+            <span className="text-xs text-slate-500">Track your day</span>
           </div>
         </button>
-        
+
         <button 
           onClick={onOpenScanner}
-          className="card-glass p-6 flex flex-col items-center gap-3 hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 group"
+          className="card-hover p-5 flex flex-col items-center gap-3"
         >
-          <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-            <Camera className="text-white" size={28} />
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
+            <Camera className="w-6 h-6 text-white" />
           </div>
           <div className="text-center">
-            <span className="font-bold text-sm text-gray-800 block">Scanner</span>
-            <span className="text-xs text-gray-500">Capture docs</span>
+            <span className="font-semibold text-slate-900 text-sm block">Scanner</span>
+            <span className="text-xs text-slate-500">Capture docs</span>
           </div>
         </button>
       </div>
 
       {/* FAMILY SECTION */}
-      <section className="card-glass mb-6 stagger-4 fade-in-up">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-            <Users className="text-white" size={20} />
+      <section className="card">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-purple-600" />
+            </div>
+            <h3 className="font-semibold text-slate-900">Family Hub</h3>
           </div>
-          <div>
-            <h2 className="font-bold text-xl text-gray-800">Family Hub</h2>
-            <p className="text-xs text-gray-500">Manage together</p>
-          </div>
+          <button className="text-sm font-medium text-emerald-600">View all</button>
         </div>
-        
+
         <div className="space-y-3">
-          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:shadow-md transition-all duration-300 transform hover:scale-105 cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
-                <BookOpen size={18} className="text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-purple-700">Grocery List</p>
-                <p className="text-xs text-purple-500">3 items remaining</p>
-              </div>
+          {/* Task Item */}
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-purple-600" />
             </div>
-            <button className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 hover:bg-purple-200 transition-colors">
-              →
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-slate-900 text-sm truncate">Grocery List</p>
+              <p className="text-xs text-slate-500">3 items remaining</p>
+            </div>
+            <button className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+              <CheckCircle2 className="w-4 h-4" />
             </button>
           </div>
-          
-          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-300 transform hover:scale-105 cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                <Target size={18} className="text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-blue-700">Chores</p>
-                <p className="text-xs text-blue-500">2 pending</p>
-              </div>
+
+          {/* Task Item */}
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Target className="w-5 h-5 text-blue-600" />
             </div>
-            <button className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
-              →
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-slate-900 text-sm truncate">Household Chores</p>
+              <p className="text-xs text-slate-500">2 tasks pending</p>
+            </div>
+            <button className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+              <CheckCircle2 className="w-4 h-4" />
             </button>
           </div>
         </div>
-        
-        <button className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-          <PlusCircle size={18} />
-          Add Family Task
-        </button>
       </section>
 
-      {/* Bottom Nav Bar (Family & Home) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-around items-center">
-        <button className="text-gray-400 hover:text-teal-600">
-          <Users className="w-6 h-6" />
-        </button>
-        <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white -mt-10 border-4 border-slate-50 shadow-lg">
-          <PlusCircle />
-        </div>
-        <button className="text-teal-600">
-          <Users className="w-6 h-6" />
-        </button>
-      </nav>
-
-      {/* Panic Alert Overlay */}
-      {showPanicAlert && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl p-8 m-4 max-w-sm text-center shadow-2xl transform scale-in animate-pulse-glow">
-            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl animate-pulse">
-              <ShieldAlert size={40} className="text-white" />
+      {/* SOS Alert Overlay */}
+      {showSOSAlert && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Shield size={40} className="text-white" />
             </div>
-            <h3 className="text-2xl font-bold gradient-text mb-2">Emergency Alert Sent!</h3>
-            <p className="text-gray-600 mb-6 text-sm">Your location has been shared with your emergency contact.</p>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Emergency Alert Sent!</h3>
+            <p className="text-slate-600 mb-6 text-sm">
+              Your location has been shared with your emergency contacts. Stay safe.
+            </p>
             <button 
-              onClick={() => setShowPanicAlert(false)}
-              className="w-full bg-gradient-to-r from-rose-600 to-orange-600 text-white py-4 rounded-xl font-bold hover:from-rose-700 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl"
+              onClick={() => setShowSOSAlert(false)}
+              className="btn-primary w-full"
             >
-              <div className="flex items-center justify-center gap-2">
-                <Heart size={20} className="animate-pulse" />
-                I'm Safe
-              </div>
+              I'm Safe Now
             </button>
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };

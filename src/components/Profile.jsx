@@ -1,300 +1,184 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Shield, LogOut, Edit3, Save, X, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase-config';
+import { 
+  User, 
+  Mail, 
+  Shield, 
+  Bell, 
+  Lock, 
+  HelpCircle, 
+  ChevronRight,
+  LogOut,
+  Settings,
+  Moon,
+  Globe
+} from 'lucide-react';
 
 const Profile = ({ onLogout }) => {
-  const [user, setUser] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    displayName: '',
-    email: '',
-    emergencyContact: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [user] = useAuthState(auth);
+  const [notifications, setNotifications] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
-  useEffect(() => {
-    // Simulate user data loading
-    const mockUser = {
-      uid: 'user123',
-      displayName: 'Jane Doe',
-      email: 'jane.doe@example.com',
-      emergencyContact: '+60 123 456 7890',
-      joinDate: 'January 2026',
-      totalDocuments: 15,
-      empowermentPoints: 142
-    };
-    setUser(mockUser);
-    setFormData({
-      displayName: mockUser.displayName,
-      email: mockUser.email,
-      emergencyContact: mockUser.emergencyContact
-    });
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setUser(prev => ({
-        ...prev,
-        displayName: formData.displayName,
-        email: formData.email,
-        emergencyContact: formData.emergencyContact
-      }));
-      
-      setIsEditing(false);
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-    } finally {
-      setLoading(false);
+  const handleLogout = async () => {
+    if (confirm('Are you sure you want to log out?')) {
+      await onLogout();
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      onLogout();
+  const menuSections = [
+    {
+      title: 'Account',
+      items: [
+        {
+          icon: User,
+          label: 'Personal Information',
+          description: 'Update your profile details',
+          action: () => console.log('Navigate to personal info')
+        },
+        {
+          icon: Shield,
+          label: 'Security',
+          description: 'Password and 2FA settings',
+          action: () => console.log('Navigate to security')
+        },
+      ]
+    },
+    {
+      title: 'Preferences',
+      items: [
+        {
+          icon: Bell,
+          label: 'Notifications',
+          description: notifications ? 'Enabled' : 'Disabled',
+          action: () => setNotifications(!notifications),
+          toggle: true,
+          toggleValue: notifications
+        },
+        {
+          icon: Moon,
+          label: 'Dark Mode',
+          description: darkMode ? 'Enabled' : 'Disabled',
+          action: () => setDarkMode(!darkMode),
+          toggle: true,
+          toggleValue: darkMode
+        },
+        {
+          icon: Globe,
+          label: 'Language',
+          description: 'English (US)',
+          action: () => console.log('Navigate to language')
+        },
+      ]
+    },
+    {
+      title: 'Support',
+      items: [
+        {
+          icon: HelpCircle,
+          label: 'Help Center',
+          description: 'Get help and support',
+          action: () => console.log('Navigate to help')
+        },
+        {
+          icon: Settings,
+          label: 'App Settings',
+          description: 'Configure app preferences',
+          action: () => console.log('Navigate to settings')
+        },
+      ]
     }
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-      </div>
-    );
-  }
+  ];
 
   return (
-    <div className="p-4 bg-gradient-to-br from-teal-50 via-white to-teal-50 min-h-screen safe-area relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-56 h-56 bg-primary-200/20 rounded-full -translate-x-1/3 -translate-y-1/3 animate-pulse-slow"></div>
-        <div className="absolute top-1/4 right-0 w-40 h-40 bg-accent-200/15 rounded-full translate-x-1/3 -translate-y-1/3 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-safety-200/10 rounded-full -translate-x-1/4 translate-y-1/4 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-      </div>
-      
-      <div className="relative z-10">
-      {/* Header */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
-              <User size={32} className="text-teal-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">{user.displayName}</h1>
-              <p className="text-slate-600">{user.email}</p>
-              <p className="text-xs text-slate-500">Member since {user.joinDate}</p>
-            </div>
+    <div className="px-4 py-4 max-w-lg mx-auto">
+      {/* Profile Header */}
+      <div className="card mb-6">
+        <div className="flex items-center gap-4">
+          <div className="avatar-lg">
+            {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-rose-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-rose-600 transition-colors flex items-center gap-2"
-          >
-            <LogOut size={18} /> Logout
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-slate-900">Account Settings</h2>
+            <p className="text-sm text-slate-500">{user?.email || 'Loading...'}</p>
+          </div>
+          <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+            <Settings className="w-5 h-5 text-slate-600" />
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <div className="text-2xl font-bold text-teal-600">{user.totalDocuments}</div>
-          <div className="text-sm text-slate-500">Documents</div>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-emerald-600">1,250</div>
+          <div className="text-xs text-slate-500 mt-1">Points</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <div className="text-2xl font-bold text-blue-600">{user.empowermentPoints}</div>
-          <div className="text-sm text-slate-500">Empowerment Points</div>
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-blue-600">6</div>
+          <div className="text-xs text-slate-500 mt-1">Documents</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-          <div className="text-2xl font-bold text-purple-600">Active</div>
-          <div className="text-sm text-slate-500">Account Status</div>
+        <div className="card text-center">
+          <div className="text-2xl font-bold text-purple-600">14</div>
+          <div className="text-xs text-slate-500 mt-1">Days Active</div>
         </div>
       </div>
 
-      {/* Message */}
-      {message.text && (
-        <div className={`p-4 rounded-lg mb-6 flex items-center gap-3 ${
-          message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
-          'bg-red-50 text-red-700 border border-red-200'
-        }`}>
-          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span>{message.text}</span>
-          <button onClick={() => setMessage({ type: '', text: '' })} className="ml-auto">
-            <X size={18} />
-          </button>
-        </div>
-      )}
-
-      {/* Profile Form */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800">Profile Settings</h2>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              isEditing 
-                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-                : 'bg-teal-600 text-white hover:bg-teal-700'
-            }`}
-          >
-            {isEditing ? (
-              <>
-                <X size={18} className="inline mr-2" /> Cancel
-              </>
-            ) : (
-              <>
-                <Edit3 size={18} className="inline mr-2" /> Edit Profile
-              </>
-            )}
-          </button>
-        </div>
-
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-              <input
-                type="text"
-                name="displayName"
-                value={formData.displayName}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Emergency Contact</label>
-              <input
-                type="tel"
-                name="emergencyContact"
-                value={formData.emergencyContact}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                placeholder="+60 123 456 7890"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-              />
-              <p className="text-xs text-slate-500 mt-1">This contact will be used for emergency alerts</p>
-            </div>
-          </div>
-
-          {isEditing && (
-            <div className="flex gap-3 mt-6">
+      {/* Menu Sections */}
+      {menuSections.map((section, idx) => (
+        <div key={idx} className="mb-6">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-1">
+            {section.title}
+          </h3>
+          <div className="space-y-2">
+            {section.items.map((item, itemIdx) => (
               <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                key={itemIdx}
+                onClick={item.action}
+                className="w-full card flex items-center gap-4 hover:shadow-md transition-all duration-200"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-teal-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
-                  </>
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <item.icon size={20} className="text-slate-600" />
+                </div>
+                
+                <div className="flex-1 text-left min-w-0">
+                  <p className="font-medium text-slate-900 text-sm">{item.label}</p>
+                  <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                </div>
+
+                {item.toggle ? (
+                  <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                    item.toggleValue ? 'bg-emerald-600' : 'bg-slate-300'
+                  }`}>
+                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
+                      item.toggleValue ? 'translate-x-5' : 'translate-x-0'
+                    }`}></div>
+                  </div>
                 ) : (
-                  <>
-                    <Save size={18} /> Save Changes
-                  </>
+                  <ChevronRight size={20} className="text-slate-400 flex-shrink-0" />
                 )}
               </button>
-            </div>
-          )}
-        </form>
-      </div>
+            ))}
+          </div>
+        </div>
+      ))}
 
-      {/* Security Section */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Shield className="text-teal-600" />
-          <h3 className="text-lg font-bold text-slate-800">Security</h3>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex justify-between items-center p-4 bg-slate-50 rounded-lg">
-            <div>
-              <p className="font-medium text-slate-800">Two-Factor Authentication</p>
-              <p className="text-sm text-slate-500">Add an extra layer of security</p>
-            </div>
-            <button className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
-              Enable
-            </button>
-          </div>
-          
-          <div className="flex justify-between items-center p-4 bg-slate-50 rounded-lg">
-            <div>
-              <p className="font-medium text-slate-800">Password</p>
-              <p className="text-sm text-slate-500">Update your account password</p>
-            </div>
-            <button className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
-              Change
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="w-full btn-danger flex items-center justify-center gap-2 mb-6"
+      >
+        <LogOut size={20} />
+        <span>Log Out</span>
+      </button>
 
-      {/* App Information */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
-        <h3 className="text-lg font-bold text-slate-800 mb-4">App Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-slate-500">Version:</span>
-            <span className="ml-2 font-medium">1.0.0</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Platform:</span>
-            <span className="ml-2 font-medium">Progressive Web App</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Storage:</span>
-            <span className="ml-2 font-medium">Cloud + Local</span>
-          </div>
-          <div>
-            <span className="text-slate-500">Last Sync:</span>
-            <span className="ml-2 font-medium">Just now</span>
-          </div>
-        </div>
-        
-        <div className="mt-4 flex gap-3">
-          <button className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
-            Terms of Service
-          </button>
-          <button className="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
-            Privacy Policy
-          </button>
-        </div>
-      </div>
+      {/* App Info */}
+      <div className="text-center py-6">
+        <p className="text-sm font-medium text-slate-900">EmpowerHer</p>
+        <p className="text-xs text-slate-500 mt-1">Version 1.0.0</p>
+        <p className="text-xs text-slate-400 mt-3">
+          Made with ❤️ for women empowerment
+        </p>
       </div>
     </div>
   );
