@@ -76,7 +76,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </header>
 
       {/* SAFETY SECTION (SOS & Timer) */}
-      <section className="bg-white rounded-2xl p-5 shadow-sm border border-rose-100 mb-6">
+      <section className="bg-white rounded-2xl p-5 shadow-sm border border-red-100 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <ShieldAlert className="text-rose-600" />
           <h2 className="font-bold text-lg">Safety Shield</h2>

@@ -82,7 +82,7 @@ const VaultGallery = () => {
   };
 
   return (
-    <div className="p-4 bg-gradient-to-br from-primary-50 via-white to-primary-50 min-h-screen safe-area relative overflow-hidden">
+      <div className="p-4 bg-gradient-to-br from-teal-50 via-white to-teal-50 min-h-screen safe-area relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-48 h-48 bg-primary-200/20 rounded-full -translate-x-1/4 -translate-y-1/4 animate-pulse-slow"></div>
