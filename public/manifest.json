@@ -1,0 +1,34 @@
+{
+  "short_name": "Empower",
+  "name": "Women's Empowerment Command Center",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0d9488",
+  "background_color": "#f8fafc",
+  "description": "A comprehensive safety and empowerment app for women with document management, career tracking, and emergency features.",
+  "categories": ["productivity", "lifestyle", "health"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ]
+}
