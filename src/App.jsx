@@ -1,13 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from './firebase-config';
+import { db } from './supabase-config';
 import MainApp from './components/MainApp';
 import Login from './components/Login';
+import Register from './components/Register';
 import './App.css';
 
 function App() {
   const [user, loading] = useAuthState(auth);
+
+  // Initialize user profile in Supabase on first login
+  useEffect(() => {
+    const initializeUserProfile = async () => {
+      if (user && !loading) {
+        const profile = await db.getUserProfile(user.uid);
+        if (!profile) {
+          await db.createUserProfile(user);
+        }
+      }
+    };
+    initializeUserProfile();
+  }, [user, loading]);
 
   if (loading) {
     return (
@@ -27,6 +42,10 @@ function App() {
           <Route 
             path="/login" 
             element={user ? <Navigate to="/" /> : <Login />} 
+          />
+          <Route 
+            path="/register" 
+            element={user ? <Navigate to="/" /> : <Register />} 
           />
           <Route 
             path="/*" 

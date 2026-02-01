@@ -1,262 +1,227 @@
-# Women's Empowerment Command Center
+# Women's Empowerment Command Center (WECC)
 
-A comprehensive Progressive Web App (PWA) designed for women's safety, document management, career tracking, and family organization.
+A production-ready Progressive Web App (PWA) designed for women's safety, document management, and personal growth tracking. Built with React 18, Vite, TailwindCSS, Firebase Authentication, and Supabase.
 
-## 🛡️ Project Vision
+## 🚀 Features
 
-Inspired by the empowerment initiatives of Anthony Tan (Grab), this application combines safety tools with document management and career tracking to reduce the "mental load" for women while providing a high-security foundation for personal growth.
+### Safety First
+- **SOS Panic Button** - One-tap emergency alert with GPS location sharing
+- **Safety Timer** - Automatic check-in system with countdown
+- **Emergency Contact** - WhatsApp integration for immediate help
+- **Browser Notifications** - Safety alerts even when app is in background
 
-## 🏗️ Technical Architecture
+### Document Management
+- **Document Scanner** - Camera-based document capture
+- **Secure Vault** - Encrypted storage with category filters (Personal/Career/Family)
+- **File Upload** - Support for images and documents
+- **Real-time Updates** - Instant sync across devices
 
-- **Frontend**: React.js (v18+) with Tailwind CSS for a mobile-first, responsive UI
-- **Backend-as-a-Service**: Firebase
-  - Authentication: Email/PW with secure "Forgot Password" flows
-  - Firestore: Real-time NoSQL database for journals, career goals, and shared family lists
-  - Storage: Secure cloud buckets for digitized documents and photos
-- **PWA**: Service Workers and Manifest.json for offline access and home-screen installation
-- **APIs (Native/Browser)**: 
-  - navigator.geolocation for SOS location tracking
-  - mediaDevices.getUserMedia for the integrated Document Scanner
+### Personal Growth
+- **Empowerment Points** - Track daily achievements
+- **Career Progress** - Visual goal tracking with progress bars
+- **Journal System** - Personal, career, and family journaling
+- **Family Hub** - Shared task management
 
-## 🌟 Feature Suite
+### PWA Capabilities
+- **Installable** - Add to home screen on any device
+- **Offline Support** - Works without internet connection
+- **Push Notifications** - Safety alerts and reminders
+- **Mobile-First** - Optimized for touch interactions
 
-### 1. Safety & Protection
-- **SOS Panic Button**: A global trigger that captures GPS coordinates and opens a pre-filled WhatsApp message to emergency contacts
-- **Safety Timer**: A countdown "Check-in" system that auto-triggers alerts if not deactivated by the user
-- **Notification Overlays**: Full-screen browser notifications for critical safety alerts
+## 🛠️ Tech Stack
 
-### 2. Personal & Family Management
-- **Document Vault**: High-fidelity camera scanning to digitize records (PDF/JPEG) with private, encrypted cloud storage
-- **Shared Command Center**: Real-time synchronized lists for household management, chores, and family schedules
-- **Journaling**: CRUD-enabled entries for personal reflection and mood tracking
+- **Frontend**: React 18, Vite, TailwindCSS
+- **Authentication**: Firebase Auth (Email/Password)
+- **Backend**: Supabase (PostgreSQL + Storage)
+- **Icons**: lucide-react
+- **PWA**: Service Worker + Web App Manifest
+- **Deployment**: Netlify
 
-### 3. Career & Productivity
-- **Goal Progress Tracker**: Visual dashboard using the formula `Progress = (Current / Target) × 100`
-- **Empowerment Points**: A gamified "click counter" that tracks user engagement and daily small wins
-- **Networking CRM**: A dedicated log to manage professional contacts and career milestones
+## 📋 Prerequisites
 
-## 🚀 Quick Start
+- Node.js 20 or higher
+- Firebase Project
+- Supabase Project
+- Git
 
-### Prerequisites
-- Node.js (version 16 or higher)
-- npm or yarn
-- Firebase project (for backend services)
+## 🔧 Setup Instructions
 
-### Installation
+### 1. Clone the Repository
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd iSync7777CALL-Woman-Empowerment-Apps
-   ```
+```bash
+git clone https://github.com/Lisaluvme/Woman-Empowerment-Apps.git
+cd Woman-Empowerment-Apps
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 2. Install Dependencies
 
-3. **Set up Firebase**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Authentication, Firestore, and Storage services
-   - Create a `.env` file in the root directory:
-     ```
-     VITE_FIREBASE_API_KEY=your_api_key
-     VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-     VITE_FIREBASE_PROJECT_ID=your_project_id
-     VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-     VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-     VITE_FIREBASE_APP_ID=your_app_id
-     ```
+```bash
+npm install
+npm install @supabase/supabase-js
+```
 
-4. **Start development server**
-   ```bash
-   npm run dev
-   ```
+### 3. Firebase Configuration
 
-5. **Build for production**
-   ```bash
-   npm run build
-   ```
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select existing
+3. Enable Authentication (Email/Password)
+4. Create a Web App in Project Settings
+5. Copy your Firebase config values
 
-## 📱 PWA Features
+### 4. Supabase Configuration
 
-This app is designed as a Progressive Web App with the following capabilities:
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+2. Create a new project
+3. Go to SQL Editor and execute the schema from `supabase-schema.sql`
+4. Create a storage bucket named `documents` with public access
+5. Copy your Supabase URL and Anon Key
 
-- **Installable**: Can be added to your phone's home screen
-- **Offline Support**: Core functionality works without internet
-- **Push Notifications**: Safety alerts and reminders
-- **Camera Access**: Document scanning directly in the browser
-- **Geolocation**: GPS-based emergency alerts
+### 5. Environment Variables
 
-## 🔒 Security & Privacy
+1. Copy `.env.example` to `.env`:
 
-- **Data Encryption**: All data is encrypted in transit and at rest
-- **User Isolation**: Each user's data is completely separate
-- **Permission-Based Access**: Camera and location access only when needed
-- **Secure Authentication**: Firebase Auth with email/password
+```bash
+cp .env.example .env
+```
 
-## 🎨 UI/UX Design
+2. Fill in your credentials:
 
-- **Mobile-First**: Optimized for smartphone use
-- **Accessibility**: High contrast, large touch targets, screen reader support
-- **Intuitive Navigation**: Bottom navigation for easy one-handed use
-- **Safety-First Design**: SOS button always accessible
+```env
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
 
-## 📦 Deployment
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+VITE_DEFAULT_EMERGENCY_CONTACT=60123456789
+```
+
+### 6. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🚀 Deployment
 
 ### Netlify Deployment
 
-1. Push your code to a GitHub repository
-2. Go to [Netlify](https://netlify.com) and connect your GitHub account
-3. Create a new site from Git and select your repository
-4. Set build settings:
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-5. Add environment variables from your `.env` file
-6. Deploy!
+1. Push code to GitHub repository
+2. Go to [Netlify](https://netlify.com)
+3. Click "Add new site" → "Import an existing project"
+4. Connect your GitHub repository
+5. Configure build settings:
+   - **Build command**: `npm run build`
+   - **Publish directory**: `dist`
+   - **Node version**: `20`
+6. Add environment variables in Netlify dashboard
+7. Deploy!
 
-### Environment Variables for Production
+### Manual Build
 
-```
-VITE_FIREBASE_API_KEY=your_production_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_production_domain
-VITE_FIREBASE_PROJECT_ID=your_production_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_production_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_production_sender_id
-VITE_FIREBASE_APP_ID=your_production_app_id
+```bash
+npm run build
 ```
 
-## 🔧 Firebase Setup
+The built files will be in the `dist` directory.
 
-### Firestore Rules
-```javascript
-{
-  "rules": {
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid"
-      }
-    },
-    "journals": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid"
-      }
-    }
-  }
-}
+## 📱 PWA Installation
+
+### Android (Chrome)
+1. Open app in Chrome
+2. Tap menu (three dots)
+3. Select "Install app" or "Add to Home Screen"
+
+### iOS (Safari)
+1. Open app in Safari
+2. Tap Share button
+3. Select "Add to Home Screen"
+
+### Desktop (Chrome/Edge)
+1. Open app in Chrome/Edge
+2. Click install icon in address bar
+3. Confirm installation
+
+## 🗄️ Database Schema
+
+The app uses Supabase PostgreSQL with the following tables:
+
+- **users** - User profiles and stats
+- **documents** - Stored documents with metadata
+- **journals** - Personal journal entries
+- **family_groups** - Family group management
+- **family_members** - Family membership
+- **family_tasks** - Shared family tasks
+- **career_goals** - Personal career tracking
+
+All tables implement Row Level Security (RLS) for data isolation.
+
+## 🔒 Security Features
+
+- **Row Level Security** - Users can only access their own data
+- **Firebase Auth** - Secure authentication with JWT tokens
+- **Encrypted Storage** - Files stored securely in Supabase Storage
+- **HTTPS Only** - All communications encrypted
+- **XSS Protection** - Input sanitization and CSP headers
+- **Privacy by Default** - No third-party analytics or tracking
+
+## 📂 Project Structure
+
+```
+src/
+├── components/
+│   ├── MainApp.jsx          # Main app layout with navigation
+│   ├── EmpowermentDashboard.jsx  # Home dashboard
+│   ├── VaultGallery.jsx     # Document vault
+│   ├── DocumentScanner.jsx  # Camera scanner
+│   ├── Login.jsx            # Authentication
+│   ├── Register.jsx         # Registration
+│   └── Profile.jsx          # User settings
+├── firebase-config.js       # Firebase configuration
+├── supabase-config.js       # Supabase client & helpers
+├── App.jsx                  # Root component with routing
+├── main.jsx                 # App entry point
+└── index.css                # Global styles
+
+public/
+├── manifest.json            # PWA manifest
+└── service-worker.js        # Service worker for offline support
 ```
 
-### Storage Rules
-```javascript
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /users/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+## 🎨 Design Principles
 
-## 📱 Browser Support
-
-- Chrome (Android & iOS)
-- Safari (iOS)
-- Firefox (Android)
-- Edge (Android)
-
-**Note**: For full functionality (camera, geolocation, notifications), the app requires HTTPS and user permissions.
+- **Mobile-First** - Designed for touch interactions
+- **Low Cognitive Load** - Clean, intuitive interface
+- **Safety Always Visible** - SOS button on every screen
+- **Accessibility** - WCAG AA compliant colors and contrast
+- **Performance** - Optimized for fast loading and smooth interactions
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎨 Beautiful Design Features
-
-### 🌈 Modern Aesthetics
-- **Gradient Backgrounds**: Beautiful animated gradients throughout the app
-- **Glass Morphism**: Modern frosted glass effects on cards and modals
-- **Smooth Animations**: Elegant transitions and hover effects
-- **Typography**: Clean, readable fonts with proper hierarchy
-
-### 🎯 Enhanced User Experience
-- **Loading States**: Beautiful animated loading screens
-- **Micro-interactions**: Satisfying button clicks and state changes
-- **Progress Indicators**: Visual feedback for all user actions
-- **Error Handling**: Graceful error states with helpful messages
-
-### 🌙 Accessibility & Inclusivity
-- **High Contrast Mode**: Support for users with visual impairments
-- **Reduced Motion**: Respects user preferences for animations
-- **Screen Reader Support**: Full accessibility compliance
-- **Color Blind Friendly**: Carefully chosen color palettes
-
-### 📱 Mobile-First Design
-- **Touch Optimized**: Large, easy-to-tap buttons
-- **Gesture Support**: Swipe gestures for navigation
-- **Adaptive Layouts**: Perfect on all screen sizes
-- **Performance Optimized**: Fast loading and smooth interactions
-
-### 🔧 Developer Experience
-- **Component Library**: Reusable, well-documented components
-- **Design System**: Consistent colors, spacing, and typography
-- **Modern Tooling**: Latest React patterns and best practices
-- **Type Safety**: Comprehensive TypeScript support
-
-## 🚀 Performance Features
-
-### ⚡ Speed Optimizations
-- **Code Splitting**: Lazy loading for faster initial load
-- **Image Optimization**: Compressed images with proper formats
-- **Bundle Analysis**: Minimized bundle size for quick loading
-- **Caching Strategy**: Intelligent caching for offline support
-
-### 📊 Analytics & Monitoring
-- **Performance Metrics**: Core Web Vitals monitoring
-- **Error Tracking**: Real-time error reporting
-- **User Analytics**: Privacy-focused usage insights
-- **A/B Testing**: Framework for experimentation
-
-## 🌟 Advanced Features
-
-### 🔐 Biometric Authentication
-- **Fingerprint/Face ID**: Secure biometric login
-- **Fallback Options**: Traditional authentication backup
-- **Privacy First**: Local biometric data storage
-
-### 🤖 AI-Powered Features
-- **Smart Categorization**: AI-powered document organization
-- **Predictive Suggestions**: Smart recommendations for tasks
-- **Voice Commands**: Hands-free navigation support
-
-### 📡 Smart Notifications
-- **Context-Aware**: Notifications based on user behavior
-- **Priority System**: Smart notification prioritization
-- **Do Not Disturb**: Respect user's focus time
-
-## 🙏 Acknowledgments
-
-- **Anthony Tan** and Grab for inspiring safety-first design principles
-- **Firebase Team** for providing excellent backend services
-- **React Community** for the amazing ecosystem
-- **All women** who inspired this project with their resilience and strength
+This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-For support, email support@empowermentapp.com or join our Slack channel.
+For issues, questions, or suggestions, please open an issue on GitHub.
+
+## 🙏 Acknowledgments
+
+- Built with ❤️ for women empowerment
+- Inspired by Grab's mobile-first design
+- Icons by [lucide-react](https://lucide.dev/)
+- Backend powered by [Supabase](https://supabase.com/)
+- Authentication by [Firebase](https://firebase.google.com/)
 
 ---
 
-**Transforming lives through beautiful, empowering technology.** ✨
-
-**Remember**: Your safety and privacy are our top priorities. This app is designed to empower you with tools for a safer, more organized life.
+**Made with love and dedication to empowering women everywhere.** 💪✨
