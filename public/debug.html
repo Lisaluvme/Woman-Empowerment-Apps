@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - iSync7777CALL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        h1 { color: #0f172a; }
+        h2 { color: #334155; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🔍 iSync7777CALL Debug Report</h1>
+    
+    <div class="section">
+        <h2>Environment Check</h2>
+        <div id="env-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>React App Status</h2>
+        <div id="react-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>Recommended Actions</h2>
+        <ul id="recommendations"></ul>
+    </div>
+
+    <script>
+        const envDiv = document.getElementById('env-check');
+        const reactDiv = document.getElementById('react-status');
+        const recommendationsDiv = document.getElementById('recommendations');
+        
+        let issues = [];
+
+        // Check if we can access the root element
+        const root = document.getElementById('root');
+        if (root) {
+            reactDiv.innerHTML += `<p class="success">✓ Root element exists in DOM</p>`;
+        } else {
+            reactDiv.innerHTML += `<p class="error">✗ Root element NOT found in DOM</p>`;
+            issues.push('Root element is missing from index.html');
+        }
+
+        // Check if React app is loaded
+        setTimeout(() => {
+            if (root && root.innerHTML.trim() === '') {
+                reactDiv.innerHTML += `<p class="warning">⚠ Root element is empty - React not rendering</p>`;
+                issues.push('React app is not rendering content');
+            } else if (root && root.innerHTML.length > 0) {
+                reactDiv.innerHTML += `<p class="success">✓ React is rendering content</p>`;
+            }
+        }, 2000);
+
+        // Check Vite dev server
+        if (window.location.port === '5173') {
+            envDiv.innerHTML += `<p class="success">✓ Running on Vite dev server (port 5173)</p>`;
+        } else {
+            envDiv.innerHTML += `<p class="warning">⚠ Not on standard Vite port</p>`;
+        }
+
+        // Check browser console for errors
+        envDiv.innerHTML += `<p><strong>Open Browser DevTools Console (F12) to check for errors:</strong></p>`;
+        envDiv.innerHTML += `<p>Look for:</p>`;
+        envDiv.innerHTML += `<ul>
+            <li>Firebase initialization errors</li>
+            <li>Import/export errors</li>
+            <li>Network request failures</li>
+            <li>React hydration errors</li>
+        </ul>`;
+
+        // Display recommendations
+        if (issues.length > 0) {
+            issues.forEach(issue => {
+                const li = document.createElement('li');
+                li.className = 'error';
+                li.textContent = issue;
+                recommendationsDiv.appendChild(li);
+            });
+        } else {
+            const li = document.createElement('li');
+            li.className = 'success';
+            li.textContent = 'No obvious issues detected. Check browser console for JavaScript errors.';
+            recommendationsDiv.appendChild(li);
+        }
+
+        // Add diagnostic tips
+        const tips = [
+            'Open browser DevTools (F12) and check Console tab',
+            'Check Network tab for failed requests',
+            'Verify .env file exists with correct Firebase/Supabase credentials',
+            'Try clearing browser cache and reload',
+            'Check if all dependencies are installed: npm install'
+        ];
+
+        tips.forEach(tip => {
+            const li = document.createElement('li');
+            li.style.color = '#64748b';
+            li.textContent = tip;
+            recommendationsDiv.appendChild(li);
+        });
+    </script>
+</body>
+</html>

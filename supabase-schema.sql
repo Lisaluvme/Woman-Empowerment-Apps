@@ -102,22 +102,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create triggers for updated_at
+-- Create triggers for updated_at (drop if exists first)
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_documents_updated_at ON documents;
 CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON documents
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_journals_updated_at ON journals;
 CREATE TRIGGER update_journals_updated_at BEFORE UPDATE ON journals
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_family_groups_updated_at ON family_groups;
 CREATE TRIGGER update_family_groups_updated_at BEFORE UPDATE ON family_groups
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_family_tasks_updated_at ON family_tasks;
 CREATE TRIGGER update_family_tasks_updated_at BEFORE UPDATE ON family_tasks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_career_goals_updated_at ON career_goals;
 CREATE TRIGGER update_career_goals_updated_at BEFORE UPDATE ON career_goals
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -151,56 +157,68 @@ ALTER TABLE family_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE career_goals ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for users
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
 CREATE POLICY "Users can view own profile"
   ON users FOR SELECT
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
 CREATE POLICY "Users can update own profile"
   ON users FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON users;
 CREATE POLICY "Users can insert own profile"
   ON users FOR INSERT
   WITH CHECK (auth.uid() = id);
 
 -- RLS Policies for documents
+DROP POLICY IF EXISTS "Users can view own documents" ON documents;
 CREATE POLICY "Users can view own documents"
   ON documents FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own documents" ON documents;
 CREATE POLICY "Users can insert own documents"
   ON documents FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own documents" ON documents;
 CREATE POLICY "Users can update own documents"
   ON documents FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own documents" ON documents;
 CREATE POLICY "Users can delete own documents"
   ON documents FOR DELETE
   USING (auth.uid() = user_id);
 
 -- RLS Policies for journals
+DROP POLICY IF EXISTS "Users can view own journals" ON journals;
 CREATE POLICY "Users can view own journals"
   ON journals FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own journals" ON journals;
 CREATE POLICY "Users can insert own journals"
   ON journals FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own journals" ON journals;
 CREATE POLICY "Users can update own journals"
   ON journals FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own journals" ON journals;
 CREATE POLICY "Users can delete own journals"
   ON journals FOR DELETE
   USING (auth.uid() = user_id);
 
 -- RLS Policies for family_groups
+DROP POLICY IF EXISTS "Users can view family groups they belong to" ON family_groups;
 CREATE POLICY "Users can view family groups they belong to"
   ON family_groups FOR SELECT
   USING (
@@ -209,10 +227,12 @@ CREATE POLICY "Users can view family groups they belong to"
     ) OR created_by = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Users can create family groups" ON family_groups;
 CREATE POLICY "Users can create family groups"
   ON family_groups FOR INSERT
   WITH CHECK (auth.uid() = created_by);
 
+DROP POLICY IF EXISTS "Group admins can update family groups" ON family_groups;
 CREATE POLICY "Group admins can update family groups"
   ON family_groups FOR UPDATE
   USING (
@@ -225,11 +245,13 @@ CREATE POLICY "Group admins can update family groups"
     )
   );
 
+DROP POLICY IF EXISTS "Group creators can delete family groups" ON family_groups;
 CREATE POLICY "Group creators can delete family groups"
   ON family_groups FOR DELETE
   USING (auth.uid() = created_by);
 
 -- RLS Policies for family_members
+DROP POLICY IF EXISTS "Users can view family members of their groups" ON family_members;
 CREATE POLICY "Users can view family members of their groups"
   ON family_members FOR SELECT
   USING (
@@ -238,6 +260,7 @@ CREATE POLICY "Users can view family members of their groups"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert family members (admin only)" ON family_members;
 CREATE POLICY "Users can insert family members (admin only)"
   ON family_members FOR INSERT
   WITH CHECK (
@@ -249,6 +272,7 @@ CREATE POLICY "Users can insert family members (admin only)"
     ) OR user_id = auth.uid()
   );
 
+DROP POLICY IF EXISTS "Users can delete family members (admin or self)" ON family_members;
 CREATE POLICY "Users can delete family members (admin or self)"
   ON family_members FOR DELETE
   USING (
@@ -262,6 +286,7 @@ CREATE POLICY "Users can delete family members (admin or self)"
   );
 
 -- RLS Policies for family_tasks
+DROP POLICY IF EXISTS "Users can view tasks of their family groups" ON family_tasks;
 CREATE POLICY "Users can view tasks of their family groups"
   ON family_tasks FOR SELECT
   USING (
@@ -270,6 +295,7 @@ CREATE POLICY "Users can view tasks of their family groups"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert tasks to their family groups" ON family_tasks;
 CREATE POLICY "Users can insert tasks to their family groups"
   ON family_tasks FOR INSERT
   WITH CHECK (
@@ -278,6 +304,7 @@ CREATE POLICY "Users can insert tasks to their family groups"
     )
   );
 
+DROP POLICY IF EXISTS "Users can update tasks of their family groups" ON family_tasks;
 CREATE POLICY "Users can update tasks of their family groups"
   ON family_tasks FOR UPDATE
   USING (
@@ -286,6 +313,7 @@ CREATE POLICY "Users can update tasks of their family groups"
     )
   );
 
+DROP POLICY IF EXISTS "Users can delete tasks of their family groups" ON family_tasks;
 CREATE POLICY "Users can delete tasks of their family groups"
   ON family_tasks FOR DELETE
   USING (
@@ -299,19 +327,23 @@ CREATE POLICY "Users can delete tasks of their family groups"
   );
 
 -- RLS Policies for career_goals
+DROP POLICY IF EXISTS "Users can view own career goals" ON career_goals;
 CREATE POLICY "Users can view own career goals"
   ON career_goals FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own career goals" ON career_goals;
 CREATE POLICY "Users can insert own career goals"
   ON career_goals FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own career goals" ON career_goals;
 CREATE POLICY "Users can update own career goals"
   ON career_goals FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own career goals" ON career_goals;
 CREATE POLICY "Users can delete own career goals"
   ON career_goals FOR DELETE
   USING (auth.uid() = user_id);
