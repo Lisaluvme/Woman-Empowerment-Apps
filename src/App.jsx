@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './firebase-config';
-import { db } from './supabase-config';
+import { auth, db } from './firebase-config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import MainApp from './components/MainApp';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -20,14 +20,26 @@ function App() {
     }
   }, []);
 
-  // Initialize user profile in Supabase on first login
+  // Initialize user profile in Firebase Firestore on first login
   useEffect(() => {
     const initializeUserProfile = async () => {
       if (user && !loading) {
         try {
-          const profile = await db.getUserProfile(user.uid);
-          if (!profile) {
-            await db.createUserProfile(user);
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (!userDoc.exists()) {
+            // Create default profile
+            await setDoc(userDocRef, {
+              email: user.email,
+              displayName: user.email?.split('@')[0] || 'User',
+              emergencyContact: '',
+              notifications: true,
+              darkMode: false,
+              createdAt: new Date(),
+              stats: { points: 0 }
+            });
+            console.log('User profile created in Firebase Firestore');
           }
         } catch (err) {
           console.error('Failed to initialize user profile:', err);
