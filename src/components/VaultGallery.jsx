@@ -50,17 +50,17 @@ const VaultGallery = ({ onOpenScanner }) => {
     return () => unsubscribe();
   }, [user]);
 
-  const handleDeleteDocument = async (doc) => {
-    if (!confirm(`Are you sure you want to delete "${doc.title}"?`)) {
+  const handleDeleteDocument = async (document) => {
+    if (!confirm(`Are you sure you want to delete "${document.title}"?`)) {
       return;
     }
 
     try {
       // Delete from Supabase Storage (FREE!)
-      if (doc.filePath) {
+      if (document.filePath) {
         const { error: storageError } = await supabase.storage
           .from('documents')
-          .remove([doc.filePath]);
+          .remove([document.filePath]);
 
         if (storageError) {
           console.error('Error deleting from storage:', storageError);
@@ -69,7 +69,7 @@ const VaultGallery = ({ onOpenScanner }) => {
       }
 
       // Delete from Firestore
-      await deleteDoc(doc(db, 'documents', doc.id));
+      await deleteDoc(doc(db, 'documents', document.id));
       
       // Document will be automatically removed from state by the onSnapshot listener
       setSelectedDoc(null);

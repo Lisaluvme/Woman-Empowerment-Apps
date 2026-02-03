@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase-config';
+import { auth, db } from '../firebase-config';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { 
   User, 
   Shield, 
@@ -12,18 +13,121 @@ import {
   Moon,
   Globe,
   Heart,
-  Sparkles
+  Sparkles,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react';
 
 const Profile = ({ onLogout }) => {
   const [user] = useAuthState(auth);
+  const [userProfile, setUserProfile] = useState(null);
+  const [documentCount, setDocumentCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Load user profile and document count
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const loadUserData = async () => {
+      try {
+        // Load user profile
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setUserProfile(data);
+          setDisplayName(data.displayName || '');
+          setEmergencyContact(data.emergencyContact || '');
+          setNotifications(data.notifications ?? true);
+          setDarkMode(data.darkMode ?? false);
+        } else {
+          // Create default profile
+          const defaultProfile = {
+            email: user.email,
+            displayName: user.email?.split('@')[0] || 'User',
+            emergencyContact: '',
+            notifications: true,
+            darkMode: false,
+            createdAt: new Date(),
+            stats: { points: 0 }
+          };
+          await updateDoc(userDocRef, defaultProfile);
+          setUserProfile(defaultProfile);
+          setDisplayName(defaultProfile.displayName);
+          setEmergencyContact(defaultProfile.emergencyContact);
+        }
+
+        // Count documents
+        const docsQuery = query(
+          collection(db, 'documents'),
+          where('userId', '==', user.uid)
+        );
+        
+        const unsubscribe = onSnapshot(docsQuery, (snapshot) => {
+          setDocumentCount(snapshot.size);
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user]);
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to log out?')) {
       await onLogout();
     }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        displayName: displayName,
+        emergencyContact: emergencyContact,
+        notifications: notifications,
+        darkMode: darkMode
+      });
+      
+      setUserProfile({
+        ...userProfile,
+        displayName,
+        emergencyContact,
+        notifications,
+        darkMode
+      });
+      
+      setEditingProfile(false);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  const calculateDaysActive = () => {
+    if (!userProfile?.createdAt) return 0;
+    const created = new Date(userProfile.createdAt.seconds * 1000);
+    const now = new Date();
+    const diff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 1;
   };
 
   const menuSections = [
@@ -111,22 +215,81 @@ const Profile = ({ onLogout }) => {
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
       <div className="flex-1 min-w-0">
-        <h2 className="text-3xl font-bold mb-2">Your Account</h2>
+        <h2 className="text-3xl font-bold mb-1">{displayName || 'Your Account'}</h2>
+        <p className="text-sm text-slate-600">{user?.email || ''}</p>
       </div>
+      <button
+        onClick={() => setEditingProfile(!editingProfile)}
+        className="p-3 bg-white/50 backdrop-blur-sm rounded-xl hover:bg-white/70 transition-all"
+      >
+        <Edit2 size={20} className="text-slate-700" />
+      </button>
     </div>
+
+    {/* Edit Profile Form */}
+    {editingProfile && (
+      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mb-6 animate-fade-in">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Display Name
+            </label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter your name"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Emergency Contact
+            </label>
+            <input
+              type="text"
+              value={emergencyContact}
+              onChange={(e) => setEmergencyContact(e.target.value)}
+              placeholder="e.g., 60123456789"
+              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setEditingProfile(false);
+                setDisplayName(userProfile?.displayName || '');
+                setEmergencyContact(userProfile?.emergencyContact || '');
+              }}
+              className="flex-1 bg-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2"
+            >
+              <X size={18} />
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveProfile}
+              className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 px-4 rounded-xl font-bold hover:from-violet-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <Check size={18} />
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Stats Section */}
     <div className="grid grid-cols-3 gap-3 mb-6">
       <div className="card text-center">
-        <div className="text-2xl font-bold text-rose-600">248</div>
+        <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.points || 0}</div>
         <div className="text-xs text-slate-500 mt-1">Points</div>
       </div>
       <div className="card text-center">
-        <div className="text-2xl font-bold text-blue-600">6</div>
+        <div className="text-2xl font-bold text-blue-600">{documentCount}</div>
         <div className="text-xs text-slate-500 mt-1">Documents</div>
       </div>
       <div className="card text-center">
-        <div className="text-2xl font-bold text-purple-600">14</div>
+        <div className="text-2xl font-bold text-purple-600">{calculateDaysActive()}</div>
         <div className="text-xs text-slate-500 mt-1">Days Active</div>
       </div>
     </div>
