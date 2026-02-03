@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2 } from 'lucide-react';
+import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2, Sparkles } from 'lucide-react';
 
 const EmpowermentDashboard = ({ onOpenScanner }) => {
   // State
@@ -51,233 +51,264 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   };
 
   return (
-    <div className="px-4 py-4 max-w-lg mx-auto space-y-4">
+    <div className="px-5 py-6 max-w-lg mx-auto space-y-5">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Good evening</h2>
-          <p className="text-sm text-slate-500">Here's your overview for today</p>
+          <h2 className="text-3xl font-bold mb-1">Good evening</h2>
+          <p className="text-sm text-gray-500 font-medium">Here's your overview for today</p>
         </div>
         <div className="text-right">
-          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-2 rounded-xl">
-            <Plus className="w-4 h-4 text-emerald-600" />
-            <span className="text-lg font-bold text-emerald-700">{empowermentPoints}</span>
+          <div className="glass-badge bg-gradient-to-r from-violet-100 to-purple-100 border-2 border-violet-200">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-violet-600" />
+              <span className="text-lg font-bold text-violet-700">{empowermentPoints}</span>
+            </div>
           </div>
-          <p className="text-xs text-slate-500 mt-1">Empowerment Points</p>
+          <p className="text-xs text-gray-500 mt-2 font-medium">Empowerment Points</p>
         </div>
       </div>
 
-      {/* SAFETY SECTION - CRITICAL & VISIBLE */}
-      <section className="card-elevated border-2 border-rose-200">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
-            <Shield className="w-4 h-4 text-rose-600" />
+      {/* HERO COMMAND CENTER CARD */}
+      <div className="hero-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="icon-container icon-container-lavender shadow-lg">
+            <Shield className="w-5 h-5 text-white" />
           </div>
-          <h3 className="font-semibold text-slate-900">Safety Shield</h3>
+          <div>
+            <h3 className="text-lg font-bold">Command Center</h3>
+            <p className="text-xs text-gray-600 font-medium">Your safety & progress hub</p>
+          </div>
         </div>
 
-        {/* SOS Panic Button - ALWAYS VISIBLE & PROMINENT */}
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="glass-card p-4 text-center">
+            <div className="text-2xl font-bold text-violet-600 mb-1">{careerGoal.current}</div>
+            <div className="text-xs text-gray-600 font-medium">Skills</div>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <div className="text-2xl font-bold text-amber-600 mb-1">{empowermentPoints}</div>
+            <div className="text-xs text-gray-600 font-medium">Points</div>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <div className="text-2xl font-bold text-emerald-600 mb-1">3</div>
+            <div className="text-xs text-gray-600 font-medium">Tasks</div>
+          </div>
+        </div>
+
+        {/* SOS Panic Button - Hero */}
         <button 
           onClick={triggerSOS}
-          className="sos-button w-full mb-4"
+          className="sos-button-premium w-full"
         >
-          <div className="flex items-center justify-center gap-2">
-            <Shield size={24} />
-            <span className="text-lg">SOS PANIC BUTTON</span>
+          <div className="flex items-center justify-center gap-3">
+            <Shield size={26} />
+            <span className="text-lg">Emergency SOS</span>
           </div>
         </button>
+      </div>
 
-        {/* Safety Timer */}
-        <div className="bg-slate-50 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
+      {/* SAFETY TIMER SECTION */}
+      <div className="glass-card-rose p-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="icon-container icon-container-rose">
+              <Clock className="w-4 h-4 text-white" />
+            </div>
             <div>
-              <p className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-500" />
-                Safety Check-in Timer
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <h3 className="text-base font-bold">Safety Timer</h3>
+              <p className="text-xs text-gray-600 font-medium mt-0.5">
                 {isTimerActive ? 'Timer active' : 'Timer inactive'}
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-slate-900">
-                {formatTime(safetyTimer)}
-              </div>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-rose-600">
+              {formatTime(safetyTimer)}
             </div>
           </div>
-
-          <div className="flex gap-2">
-            <button 
-              onClick={handleStartTimer}
-              disabled={isTimerActive}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                isTimerActive 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95'
-              }`}
-            >
-              Start
-            </button>
-            <button 
-              onClick={handleStopTimer}
-              disabled={!isTimerActive}
-              className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                !isTimerActive 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                  : 'bg-slate-700 text-white hover:bg-slate-800 active:scale-95'
-              }`}
-            >
-              Stop
-            </button>
-            <button 
-              onClick={handleCheckIn}
-              className="flex-1 py-2.5 px-3 rounded-lg text-sm font-medium bg-teal-600 text-white hover:bg-teal-700 active:scale-95 transition-all duration-200"
-            >
-              Check-in
-            </button>
-          </div>
         </div>
-      </section>
+
+        <div className="flex gap-2">
+          <button 
+            onClick={handleStartTimer}
+            disabled={isTimerActive}
+            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
+              isTimerActive 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                : 'btn-primary-glass hover:shadow-lg'
+            }`}
+          >
+            Start
+          </button>
+          <button 
+            onClick={handleStopTimer}
+            disabled={!isTimerActive}
+            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
+              !isTimerActive 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-800 text-white hover:bg-gray-900 active:scale-95'
+            }`}
+          >
+            Stop
+          </button>
+          <button 
+            onClick={handleCheckIn}
+            className="flex-1 py-3 px-4 rounded-2xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all duration-200 shadow-lg"
+          >
+            Check-in
+          </button>
+        </div>
+      </div>
 
       {/* CAREER PROGRESS SECTION */}
-      <section className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-            <Target className="w-4 h-4 text-emerald-600" />
+      <div className="glass-card-lavender p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="icon-container icon-container-lavender">
+            <Target className="w-4 h-4 text-white" />
           </div>
-          <h3 className="font-semibold text-slate-900">Career Progress</h3>
+          <h3 className="text-base font-bold">Career Progress</h3>
         </div>
 
-        <div className="space-y-4">
-          {/* Progress Card */}
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="font-medium text-slate-900">Monthly Skill Goal</p>
-                <p className="text-sm text-slate-600 mt-1">
-                  {careerGoal.current} of {careerGoal.target} skills completed
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-emerald-600">{progressPercent.toFixed(0)}%</p>
-                <div className="flex items-center justify-end gap-1 mt-1">
-                  <TrendingUp className="w-3 h-3 text-emerald-500" />
-                  <span className="text-xs text-emerald-600">On track</span>
-                </div>
-              </div>
+        {/* Progress Card */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80 mb-5">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <p className="font-bold text-base mb-1">Monthly Skill Goal</p>
+              <p className="text-sm text-gray-600 font-medium">
+                {careerGoal.current} of {careerGoal.target} skills completed
+              </p>
             </div>
-
-            <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-gradient-lavender">{progressPercent.toFixed(0)}%</p>
+              <div className="flex items-center justify-end gap-1 mt-1">
+                <TrendingUp className="w-3 h-3 text-violet-600" />
+                <span className="text-xs text-violet-600 font-semibold">On track</span>
+              </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => setEmpowermentPoints(p => p + 100)}
-              className="bg-white border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-            >
+          <div className="progress-bar-glass">
+            <div 
+              className="progress-fill-glass"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            onClick={() => setEmpowermentPoints(p => p + 100)}
+            className="btn-secondary-glass hover:shadow-md active:scale-95"
+          >
+            <div className="flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" />
-              Add Progress
-            </button>
-            <button className="bg-white border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 text-slate-700 py-3 rounded-xl font-medium transition-all duration-200 active:scale-95 flex items-center justify-center gap-2">
+              <span>Add Progress</span>
+            </div>
+          </button>
+          <button className="btn-secondary-glass hover:shadow-md active:scale-95">
+            <div className="flex items-center justify-center gap-2">
               <Target className="w-4 h-4" />
-              Update Goal
-            </button>
-          </div>
+              <span>Update Goal</span>
+            </div>
+          </button>
         </div>
-      </section>
+      </div>
 
       {/* QUICK ACTIONS */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
         <button 
           onClick={() => setEmpowermentPoints(p => p + 50)}
-          className="card-hover p-5 flex flex-col items-center gap-3"
+          className="glass-card p-5 hover:shadow-xl active:scale-95"
         >
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-            <BookOpen className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-center">
-            <span className="font-semibold text-slate-900 text-sm block">Journal</span>
-            <span className="text-xs text-slate-500">Track your day</span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="icon-container icon-container-sky shadow-md">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-center">
+              <span className="font-bold text-sm block">Journal</span>
+              <span className="text-xs text-gray-500 font-medium">Track your day</span>
+            </div>
           </div>
         </button>
 
         <button 
           onClick={onOpenScanner}
-          className="card-hover p-5 flex flex-col items-center gap-3"
+          className="glass-card p-5 hover:shadow-xl active:scale-95"
         >
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-md">
-            <Camera className="w-6 h-6 text-white" />
-          </div>
-          <div className="text-center">
-            <span className="font-semibold text-slate-900 text-sm block">Scanner</span>
-            <span className="text-xs text-slate-500">Capture docs</span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="icon-container icon-container-champagne shadow-md">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-center">
+              <span className="font-bold text-sm block">Scanner</span>
+              <span className="text-xs text-gray-500 font-medium">Capture docs</span>
+            </div>
           </div>
         </button>
       </div>
 
       {/* FAMILY SECTION */}
-      <section className="card">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Users className="w-4 h-4 text-purple-600" />
+      <div className="glass-card p-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="icon-container icon-container-lavender">
+              <Users className="w-4 h-4 text-white" />
             </div>
-            <h3 className="font-semibold text-slate-900">Family Hub</h3>
+            <h3 className="text-base font-bold">Family Hub</h3>
           </div>
-          <button className="text-sm font-medium text-emerald-600">View all</button>
+          <button className="text-sm font-bold text-violet-600 hover:text-violet-700 transition-colors">
+            View all
+          </button>
         </div>
 
         <div className="space-y-3">
           {/* Task Item */}
-          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-purple-600" />
+          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all">
+            <div className="icon-container icon-container-sky">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-slate-900 text-sm truncate">Grocery List</p>
-              <p className="text-xs text-slate-500">3 items remaining</p>
+              <p className="font-bold text-sm truncate">Grocery List</p>
+              <p className="text-xs text-gray-600 font-medium mt-0.5">3 items remaining</p>
             </div>
-            <button className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-              <CheckCircle2 className="w-4 h-4" />
+            <button className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm">
+              <CheckCircle2 className="w-5 h-5" />
             </button>
           </div>
 
           {/* Task Item */}
-          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all">
+            <div className="icon-container icon-container-champagne">
+              <Target className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-slate-900 text-sm truncate">Household Chores</p>
-              <p className="text-xs text-slate-500">2 tasks pending</p>
+              <p className="font-bold text-sm truncate">Household Chores</p>
+              <p className="text-xs text-gray-600 font-medium mt-0.5">2 tasks pending</p>
             </div>
-            <button className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-              <CheckCircle2 className="w-4 h-4" />
+            <button className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm">
+              <CheckCircle2 className="w-5 h-5" />
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* SOS Alert Overlay */}
       {showSOSAlert && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
-            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+          <div className="glass-card-rose p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl">
               <Shield size={40} className="text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Emergency Alert Sent!</h3>
-            <p className="text-slate-600 mb-6 text-sm">
+            <h3 className="text-2xl font-bold mb-2">Emergency Alert Sent!</h3>
+            <p className="text-gray-700 mb-7 text-sm font-medium leading-relaxed">
               Your location has been shared with your emergency contacts. Stay safe.
             </p>
             <button 
               onClick={() => setShowSOSAlert(false)}
-              className="btn-primary w-full"
+              className="btn-primary-glass w-full shadow-lg"
             >
               I'm Safe Now
             </button>

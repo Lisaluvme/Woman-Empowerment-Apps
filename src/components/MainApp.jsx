@@ -19,6 +19,7 @@ const MainApp = () => {
     const path = location.pathname;
     if (path === '/vault') setActiveTab('vault');
     else if (path === '/profile') setActiveTab('profile');
+    else if (path === '/safety') setActiveTab('safety');
     else setActiveTab('home');
   }, [location]);
 
@@ -36,6 +37,8 @@ const MainApp = () => {
         return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
       case 'vault': 
         return <VaultGallery onOpenScanner={() => setShowScanner(true)} />;
+      case 'safety':
+        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
       case 'profile': 
         return <Profile onLogout={handleLogout} />;
       default: 
@@ -44,25 +47,25 @@ const MainApp = () => {
   };
 
   return (
-    <div className="app-shell bg-slate-50">
+    <div className="app-shell">
       {/* Header */}
       <header className="app-header safe-area-top">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="icon-container icon-container-lavender shadow-lg">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 leading-tight">EmpowerHer</h1>
-              <p className="text-xs text-slate-500">Command Center</p>
+              <h1 className="text-xl font-bold leading-tight">EmpowerHer</h1>
+              <p className="text-xs font-medium text-gray-500">Command Center</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center transition-colors">
-              <Bell className="w-5 h-5 text-slate-600" />
+          <div className="flex items-center gap-3">
+            <button className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center hover:scale-105 transition-all">
+              <Bell className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="avatar">
+            <div className="avatar-glass">
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>
@@ -77,8 +80,8 @@ const MainApp = () => {
       {/* Global Document Scanner Overlay */}
       {showScanner && (
         <DocumentScanner 
-          onSave={(img) => {
-            console.log("Saving image...", img);
+          onSave={(doc) => {
+            console.log("Document saved successfully:", doc);
             setShowScanner(false);
             setActiveTab('vault');
           }} 
@@ -88,42 +91,45 @@ const MainApp = () => {
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
-        <div className="flex justify-around items-center px-2 py-2">
+        <div className="flex justify-around items-center px-3 py-3">
           <button 
             onClick={() => setActiveTab('home')}
-            className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
+            className={`nav-item-glass ${activeTab === 'home' ? 'active' : ''}`}
           >
-            <Home size={22} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
-            <span className="text-xs font-medium">Home</span>
+            <Home size={23} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
+            <span className="text-xs font-semibold">Home</span>
           </button>
 
           <button 
             onClick={() => setActiveTab('vault')}
-            className={`nav-item ${activeTab === 'vault' ? 'active' : ''}`}
+            className={`nav-item-glass ${activeTab === 'vault' ? 'active' : ''}`}
           >
-            <FolderOpen size={22} strokeWidth={activeTab === 'vault' ? 2.5 : 2} />
-            <span className="text-xs font-medium">Vault</span>
+            <FolderOpen size={23} strokeWidth={activeTab === 'vault' ? 2.5 : 2} />
+            <span className="text-xs font-semibold">Vault</span>
           </button>
 
           {/* Floating Scanner Button */}
           <button 
             onClick={() => setShowScanner(true)}
-            className="relative -mt-8 bg-gradient-to-br from-emerald-500 to-teal-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
+            className="fab-glass relative -mt-8 w-16 h-16 rounded-3xl flex items-center justify-center"
           >
-            <Plus size={28} className="text-white" strokeWidth={2.5} />
+            <Plus size={32} className="text-white" strokeWidth={2.5} />
           </button>
 
-          <button className="nav-item">
-            <Shield size={22} strokeWidth={2} />
-            <span className="text-xs font-medium">Safety</span>
+          <button 
+            onClick={() => setActiveTab('safety')}
+            className={`nav-item-glass ${activeTab === 'safety' ? 'active' : ''}`}
+          >
+            <Shield size={23} strokeWidth={activeTab === 'safety' ? 2.5 : 2} />
+            <span className="text-xs font-semibold">Safety</span>
           </button>
 
           <button 
             onClick={() => setActiveTab('profile')}
-            className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+            className={`nav-item-glass ${activeTab === 'profile' ? 'active' : ''}`}
           >
-            <User size={22} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
-            <span className="text-xs font-medium">Account</span>
+            <User size={23} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
+            <span className="text-xs font-semibold">Account</span>
           </button>
         </div>
       </nav>

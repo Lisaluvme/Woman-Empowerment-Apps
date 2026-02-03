@@ -1,12 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, RefreshCw, Check, Trash2, X, AlertCircle } from 'lucide-react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, storage, db } from '../firebase-config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2 } from 'lucide-react';
 
 const DocumentScanner = ({ onSave, onCancel }) => {
+  const [user] = useAuthState(auth);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [docTitle, setDocTitle] = useState('');
+  const [docCategory, setDocCategory] = useState('personal');
 
   // 1. Start the Camera
   const startCamera = async () => {
@@ -60,6 +68,64 @@ const DocumentScanner = ({ onSave, onCancel }) => {
         setCapturedImage(e.target.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // 5. Save document to Firebase
+  const handleSave = async () => {
+    if (!user) {
+      setError('You must be logged in to save documents');
+      return;
+    }
+
+    if (!docTitle.trim()) {
+      setError('Please enter a document title');
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      // Convert base64 to blob
+      const response = await fetch(capturedImage);
+      const blob = await response.blob();
+      
+      // Create file with timestamp
+      const timestamp = Date.now();
+      const fileName = `${timestamp}.jpg`;
+      
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `documents/${user.uid}/${fileName}`);
+      const snapshot = await uploadBytes(storageRef, blob, {
+        contentType: 'image/jpeg'
+      });
+      
+      // Get download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      // Save document metadata to Firestore
+      const docData = {
+        userId: user.uid,
+        title: docTitle,
+        category: docCategory,
+        fileUrl: downloadURL,
+        filePath: `documents/${user.uid}/${fileName}`,
+        fileType: 'image/jpeg',
+        createdAt: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(db, 'documents'), docData);
+      const savedDoc = { id: docRef.id, ...docData };
+
+      console.log('Document saved successfully:', savedDoc);
+      onSave(savedDoc);
+
+    } catch (err) {
+      console.error('Error saving document:', err);
+      setError(err.message || 'Failed to save document. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -121,38 +187,84 @@ const DocumentScanner = ({ onSave, onCancel }) => {
           </button>
         </div>
       ) : (
-        <div className="w-full max-w-sm flex flex-col gap-4">
+        <div className="w-full max-w-sm flex flex-col gap-4 bg-white rounded-2xl p-6 shadow-2xl">
           <div className="relative">
-            <img src={capturedImage} alt="Preview" className="rounded-lg shadow-2xl border-4 border-white w-full" />
-            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
-              ✓ Captured
-            </div>
-          </div>
-          
-          <div className="flex gap-4">
-            <button 
+            <img src={capturedImage} alt="Preview" className="rounded-lg shadow-lg border-2 border-gray-200 w-full" />
+            <button
               onClick={() => {
                 setCapturedImage(null);
                 setError('');
-              }} 
-              className="flex-1 bg-gray-700 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-gray-600 transition-colors"
+                setDocTitle('');
+                setDocCategory('personal');
+              }}
+              className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
             >
-              <RefreshCw size={20} /> Retake
-            </button>
-            <button 
-              onClick={() => onSave(capturedImage)} 
-              className="flex-1 bg-teal-600 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 font-bold hover:bg-teal-700 transition-colors"
-            >
-              <Check size={20} /> Save to Vault
+              <RefreshCw size={16} />
             </button>
           </div>
-          
-          <button 
-            onClick={() => setCapturedImage(null)} 
-            className="text-gray-400 flex items-center justify-center gap-2 mt-2 hover:text-gray-600 transition-colors"
-          >
-            <Trash2 size={18} /> Discard
-          </button>
+
+          {/* Document Details Form */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Document Title *
+              </label>
+              <input
+                type="text"
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+                placeholder="e.g., Passport, Certificate, etc."
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:outline-none transition-colors"
+                maxLength={100}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={docCategory}
+                onChange={(e) => setDocCategory(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:outline-none transition-colors bg-white"
+              >
+                <option value="personal">Personal</option>
+                <option value="career">Career</option>
+                <option value="family">Family</option>
+                <option value="legal">Legal</option>
+                <option value="medical">Medical</option>
+                <option value="financial">Financial</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={onCancel}
+              disabled={isSaving}
+              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving || !docTitle.trim()}
+              className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check size={20} />
+                  Save Document
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
       

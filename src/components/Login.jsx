@@ -59,31 +59,39 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-teal-50/30 flex flex-col justify-center px-4 sm:px-6 relative overflow-hidden">
-      {/* Background decoration */}
+    <div className="min-h-screen bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100 flex flex-col justify-center px-4 sm:px-6 relative overflow-hidden">
+      {/* Animated background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl"></div>
+        {/* Large floating gradient orbs */}
+        <div className="absolute -top-48 -right-48 w-96 h-96 bg-gradient-to-br from-violet-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute -bottom-48 -left-48 w-96 h-96 bg-gradient-to-br from-fuchsia-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse-slow" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/4 -left-24 w-64 h-64 bg-gradient-to-br from-rose-400/15 to-pink-500/15 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-1/4 -right-24 w-64 h-64 bg-gradient-to-br from-indigo-400/15 to-violet-500/15 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        
+        {/* Decorative circles */}
+        <div className="absolute top-20 left-10 w-4 h-4 bg-violet-400/30 rounded-full animate-ping"></div>
+        <div className="absolute top-40 right-20 w-3 h-3 bg-fuchsia-400/30 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-2 h-2 bg-purple-400/30 rounded-full animate-ping" style={{animationDelay: '1.5s'}}></div>
       </div>
 
       {/* Login Container */}
       <div className="relative w-full max-w-md mx-auto">
         {/* Logo & Branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg mb-4">
-            <Shield className="w-8 h-8 text-white" />
+        <div className="text-center mb-8 animate-fade-in-down">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-3xl shadow-2xl shadow-purple-500/30 mb-5 animate-bounce-subtle">
+            <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Empower<span className="text-gradient">Her</span>
+          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 mb-2">
+            EmpowerHer
           </h1>
-          <p className="text-slate-600 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-500" />
+          <p className="text-slate-700 flex items-center justify-center gap-2 text-sm font-medium">
+            <Sparkles className="w-4 h-4 text-fuchsia-500 animate-sparkle" />
             Your Personal Command Center
           </p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+        {/* Login Card - Glassmorphism */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-purple-500/10 border border-white/50 p-8 animate-fade-in-up">
           {/* Header */}
           <div className="mb-6">
             <h2 className="text-xl font-bold text-slate-900 mb-1">
