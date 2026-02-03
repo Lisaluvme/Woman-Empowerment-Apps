@@ -1,9 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, storage, db } from '../firebase-config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from '../firebase-config';
+import { createClient } from '@supabase/supabase-js';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2 } from 'lucide-react';
+
+// Initialize Supabase for storage only
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const DocumentScanner = ({ onSave, onCancel }) => {
   const [user] = useAuthState(auth);
@@ -71,7 +76,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
     }
   };
 
-  // 5. Save document to Firebase
+  // 5. Save document (Supabase Storage + Firebase Firestore)
   const handleSave = async () => {
     if (!user) {
       setError('You must be logged in to save documents');
@@ -94,23 +99,32 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       // Create file with timestamp
       const timestamp = Date.now();
       const fileName = `${timestamp}.jpg`;
+      const filePath = `documents/${user.uid}/${fileName}`;
       
-      // Upload to Firebase Storage
-      const storageRef = ref(storage, `documents/${user.uid}/${fileName}`);
-      const snapshot = await uploadBytes(storageRef, blob, {
-        contentType: 'image/jpeg'
-      });
-      
-      // Get download URL
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      // Upload to Supabase Storage (FREE!)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
 
-      // Save document metadata to Firestore
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL from Supabase
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      // Save document metadata to Firebase Firestore
       const docData = {
         userId: user.uid,
         title: docTitle,
         category: docCategory,
-        fileUrl: downloadURL,
-        filePath: `documents/${user.uid}/${fileName}`,
+        fileUrl: publicUrl,
+        filePath: filePath,
         fileType: 'image/jpeg',
         createdAt: serverTimestamp()
       };

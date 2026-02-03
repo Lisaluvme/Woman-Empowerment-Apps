@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, storage } from '../firebase-config';
+import { auth, db } from '../firebase-config';
+import { createClient } from '@supabase/supabase-js';
 import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { ref as storageRef, deleteObject } from 'firebase/storage';
 import { Search, Filter, Plus, Grid, List, Trash2, Edit2, X, FolderOpen, Loader2, Download } from 'lucide-react';
+
+// Initialize Supabase for storage only
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const VaultGallery = ({ onOpenScanner }) => {
   const [user] = useAuthState(auth);
@@ -51,10 +56,16 @@ const VaultGallery = ({ onOpenScanner }) => {
     }
 
     try {
-      // Delete from storage
+      // Delete from Supabase Storage (FREE!)
       if (doc.filePath) {
-        const fileRef = storageRef(storage, doc.filePath);
-        await deleteObject(fileRef);
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove([doc.filePath]);
+
+        if (storageError) {
+          console.error('Error deleting from storage:', storageError);
+          // Continue anyway to delete from database
+        }
       }
 
       // Delete from Firestore
