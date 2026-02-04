@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Journals collection
+    match /journals/{journalId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow create if user is authenticated
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow update if user owns the journal
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow delete if user owns the journal
+      allow delete: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // Family tasks collection
+    match /family_tasks/{taskId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Documents collection
+    match /documents/{documentId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // Career goals collection
+    match /career_goals/{goalId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+    }
+  }
+}
