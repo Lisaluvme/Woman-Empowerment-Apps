@@ -250,7 +250,8 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
         <button 
           onClick={handleOpenJournal}
-          className="glass-card p-5 hover:shadow-xl active:scale-95"
+          className="glass-card p-5 hover:shadow-xl active:scale-95 relative z-10"
+          style={{ cursor: 'pointer' }}
         >
           <div className="flex flex-col items-center gap-3">
             <div className="icon-container icon-container-sky shadow-md">
