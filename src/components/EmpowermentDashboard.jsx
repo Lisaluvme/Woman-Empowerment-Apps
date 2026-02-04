@@ -51,8 +51,15 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   };
 
   // Journal handlers
-  const handleOpenJournal = () => setShowJournalModal(true);
-  const handleCloseJournal = () => setShowJournalModal(false);
+  const handleOpenJournal = () => {
+    console.log('Journal button clicked!');
+    setShowJournalModal(true);
+    console.log('showJournalModal set to true');
+  };
+  const handleCloseJournal = () => {
+    console.log('Close journal clicked');
+    setShowJournalModal(false);
+  };
   const handleJournalCreated = (journalEntry) => {
     setCurrentJournalEntry(journalEntry);
     // Auto-switch to show calendar after journal creation
