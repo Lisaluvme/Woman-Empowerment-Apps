@@ -53,8 +53,9 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   // Journal handlers
   const handleOpenJournal = () => {
     console.log('Journal button clicked!');
+    alert('Journal button was clicked! Modal should appear now.');
     setShowJournalModal(true);
-    console.log('showJournalModal set to true');
+    console.log('showJournalModal set to true:', showJournalModal);
   };
   const handleCloseJournal = () => {
     console.log('Close journal clicked');
