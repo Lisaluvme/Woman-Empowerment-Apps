@@ -6,12 +6,15 @@ import EmpowermentDashboard from './EmpowermentDashboard';
 import VaultGallery from './VaultGallery';
 import DocumentScanner from './DocumentScanner';
 import Profile from './Profile';
-import { Home, Shield, FolderOpen, User, Plus, Bell } from 'lucide-react';
+import GoogleCalendarIntegration from './GoogleCalendarIntegration';
+import JournalWithCalendar from './JournalWithCalendar';
+import { Home, Shield, FolderOpen, User, Plus, Bell, Calendar } from 'lucide-react';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showScanner, setShowScanner] = useState(false);
   const [user] = useAuthState(auth);
+  const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
   const location = useLocation();
 
   // Update active tab based on route
@@ -20,8 +23,27 @@ const MainApp = () => {
     if (path === '/vault') setActiveTab('vault');
     else if (path === '/profile') setActiveTab('profile');
     else if (path === '/safety') setActiveTab('safety');
+    else if (path === '/calendar') setActiveTab('calendar');
+    else if (path === '/journal') setActiveTab('journal');
     else setActiveTab('home');
   }, [location]);
+
+  /**
+   * Handle journal creation and trigger calendar sync
+   */
+  const handleJournalCreated = (journalEntry) => {
+    setCurrentJournalEntry(journalEntry);
+    // Auto-switch to calendar tab to show sync
+    setTimeout(() => setActiveTab('calendar'), 500);
+  };
+
+  /**
+   * Handle calendar sync success
+   */
+  const handleCalendarSyncSuccess = (eventId, eventLink) => {
+    console.log('Calendar sync successful:', eventId, eventLink);
+    // Could update Firestore with event IDs here if needed
+  };
 
   const handleLogout = async () => {
     try {
@@ -41,6 +63,25 @@ const MainApp = () => {
         return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
       case 'profile': 
         return <Profile onLogout={handleLogout} />;
+      case 'calendar':
+        return (
+          <div className="content-container">
+            <GoogleCalendarIntegration 
+              user={user}
+              journalEntry={currentJournalEntry}
+              onSyncSuccess={handleCalendarSyncSuccess}
+            />
+          </div>
+        );
+      case 'journal':
+        return (
+          <div className="content-container">
+            <JournalWithCalendar 
+              user={user}
+              onJournalCreated={handleJournalCreated}
+            />
+          </div>
+        );
       default: 
         return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
     }
@@ -130,6 +171,14 @@ const MainApp = () => {
           >
             <User size={23} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
             <span className="text-xs font-semibold">Account</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('journal')}
+            className={`nav-item-glass ${activeTab === 'journal' ? 'active' : ''}`}
+          >
+            <Calendar size={23} strokeWidth={activeTab === 'journal' ? 2.5 : 2} />
+            <span className="text-xs font-semibold">Journal</span>
           </button>
         </div>
       </nav>
