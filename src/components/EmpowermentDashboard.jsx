@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2, Sparkles } from 'lucide-react';
+import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2, Sparkles, X } from 'lucide-react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase-config';
+import JournalWithCalendar from './JournalWithCalendar';
+import GoogleCalendarIntegration from './GoogleCalendarIntegration';
 
 const EmpowermentDashboard = ({ onOpenScanner }) => {
+  const [user] = useAuthState(auth);
+  const [showJournalModal, setShowJournalModal] = useState(false);
+  const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
   // State
   const [empowermentPoints, setEmpowermentPoints] = useState(1250);
   const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
@@ -41,6 +48,20 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   const handleCheckIn = () => {
     setIsTimerActive(false);
     setSafetyTimer(3600);
+  };
+
+  // Journal handlers
+  const handleOpenJournal = () => setShowJournalModal(true);
+  const handleCloseJournal = () => setShowJournalModal(false);
+  const handleJournalCreated = (journalEntry) => {
+    setCurrentJournalEntry(journalEntry);
+    // Auto-switch to show calendar after journal creation
+    setTimeout(() => {
+      setShowJournalModal(false);
+    }, 1500);
+  };
+  const handleCalendarSyncSuccess = (eventId, eventLink) => {
+    console.log('Calendar sync successful:', eventId, eventLink);
   };
 
   // Format timer display
@@ -220,7 +241,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       {/* QUICK ACTIONS */}
       <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
         <button 
-          onClick={() => setEmpowermentPoints(p => p + 50)}
+          onClick={handleOpenJournal}
           className="glass-card p-5 hover:shadow-xl active:scale-95"
         >
           <div className="flex flex-col items-center gap-3">
@@ -294,6 +315,40 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           </div>
         </div>
       </div>
+
+      {/* Journal Modal Overlay */}
+      {showJournalModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-in zoom-in duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-2xl font-bold">Journal Entry</h3>
+                <p className="text-sm text-gray-600 mt-1">Write and sync to Google Calendar</p>
+              </div>
+              <button 
+                onClick={handleCloseJournal}
+                className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all shadow-sm"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <JournalWithCalendar 
+              user={user}
+              onJournalCreated={handleJournalCreated}
+            />
+            
+            {/* Calendar Integration Preview */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <GoogleCalendarIntegration 
+                user={user}
+                journalEntry={currentJournalEntry}
+                onSyncSuccess={handleCalendarSyncSuccess}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SOS Alert Overlay */}
       {showSOSAlert && (
