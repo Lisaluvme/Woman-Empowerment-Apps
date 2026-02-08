@@ -1,6 +1,6 @@
 // Enhanced Service Worker for Women's Empowerment Command Center PWA
 
-const CACHE_NAME = 'empowerment-app-v2';
+const CACHE_NAME = 'empowerment-app-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -36,16 +36,23 @@ const cacheFirstStrategy = async (request) => {
     return fetch(request);
   }
 
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
+  try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkResponse.clone()).catch(() => {
+        // Silently fail if caching is not supported for this request
+      });
+    }
+    return networkResponse;
+  } catch (error) {
+    // If caching fails, just return the network response
+    return fetch(request);
   }
-  const networkResponse = await fetch(request);
-  if (networkResponse && networkResponse.status === 200) {
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, networkResponse.clone());
-  }
-  return networkResponse;
 };
 
 const networkFirstStrategy = async (request) => {
@@ -57,7 +64,9 @@ const networkFirstStrategy = async (request) => {
     const networkResponse = await fetch(request);
     if (networkResponse && networkResponse.status === 200) {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
+      cache.put(request, networkResponse.clone()).catch(() => {
+        // Silently fail if caching is not supported for this request
+      });
     }
     return networkResponse;
   } catch (error) {
@@ -129,7 +138,14 @@ self.addEventListener('fetch', (event) => {
   else {
     event.respondWith(
       caches.match(request).then((response) => {
-        return response || fetch(request);
+        if (response) {
+          return response;
+        }
+        return fetch(request).catch(() => {
+          return new Response('Offline', { status: 503 });
+        });
+      }).catch(() => {
+        return fetch(request);
       })
     );
   }
