@@ -1,14 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '../firebase-config';
-import { createClient } from '@supabase/supabase-js';
+import { auth, db, supabase } from '../firebase-config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2 } from 'lucide-react';
-
-// Initialize Supabase for storage only
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const DocumentScanner = ({ onSave, onCancel }) => {
   const [user] = useAuthState(auth);

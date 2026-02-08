@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { createClient } from '@supabase/supabase-js';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -39,6 +40,11 @@ try {
   console.error('Error message:', error.message);
   throw error;
 }
+
+// Initialize Supabase for storage only (single instance)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export { app, auth, db, storage };
 export default app;

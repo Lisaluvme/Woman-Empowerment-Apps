@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '../firebase-config';
-import { createClient } from '@supabase/supabase-js';
-import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { auth, db, supabase } from '../firebase-config';
+import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { Search, Filter, Plus, Grid, List, Trash2, Edit2, X, FolderOpen, Loader2, Download } from 'lucide-react';
-
-// Initialize Supabase for storage only
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const VaultGallery = ({ onOpenScanner }) => {
   const [user] = useAuthState(auth);
@@ -28,11 +22,10 @@ const VaultGallery = ({ onOpenScanner }) => {
     }
 
     setLoading(true);
-    
+
     let q = query(
       collection(db, 'documents'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -40,6 +33,12 @@ const VaultGallery = ({ onOpenScanner }) => {
         id: doc.id,
         ...doc.data()
       }));
+      // Sort by createdAt client-side (newest first)
+      docs.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return bTime - aTime;
+      });
       setDocuments(docs);
       setLoading(false);
     }, (error) => {
