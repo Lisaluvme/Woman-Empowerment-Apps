@@ -121,9 +121,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         </div>
 
         {/* SOS Panic Button - Hero */}
-        <button 
+        <button
+          type="button"
           onClick={triggerSOS}
-          className="sos-button-premium w-full"
+          className="sos-button-premium w-full cursor-pointer"
         >
           <div className="flex items-center justify-center gap-3">
             <Shield size={26} />
@@ -154,31 +155,34 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         </div>
 
         <div className="flex gap-2">
-          <button 
+          <button
+            type="button"
             onClick={handleStartTimer}
             disabled={isTimerActive}
             className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
-              isTimerActive 
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                : 'btn-primary-glass hover:shadow-lg'
+              isTimerActive
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'btn-primary-glass hover:shadow-lg cursor-pointer'
             }`}
           >
             Start
           </button>
-          <button 
+          <button
+            type="button"
             onClick={handleStopTimer}
             disabled={!isTimerActive}
             className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
-              !isTimerActive 
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-800 text-white hover:bg-gray-900 active:scale-95'
+              !isTimerActive
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-800 text-white hover:bg-gray-900 active:scale-95 cursor-pointer'
             }`}
           >
             Stop
           </button>
-          <button 
+          <button
+            type="button"
             onClick={handleCheckIn}
-            className="flex-1 py-3 px-4 rounded-2xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all duration-200 shadow-lg"
+            className="flex-1 py-3 px-4 rounded-2xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all duration-200 shadow-lg cursor-pointer"
           >
             Check-in
           </button>
@@ -222,16 +226,20 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <button 
+          <button
+            type="button"
             onClick={() => setEmpowermentPoints(p => p + 100)}
-            className="btn-secondary-glass hover:shadow-md active:scale-95"
+            className="btn-secondary-glass hover:shadow-md active:scale-95 cursor-pointer"
           >
             <div className="flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" />
               <span>Add Progress</span>
             </div>
           </button>
-          <button className="btn-secondary-glass hover:shadow-md active:scale-95">
+          <button
+            type="button"
+            className="btn-secondary-glass hover:shadow-md active:scale-95 cursor-pointer"
+          >
             <div className="flex items-center justify-center gap-2">
               <Target className="w-4 h-4" />
               <span>Update Goal</span>
@@ -242,10 +250,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
 
       {/* QUICK ACTIONS */}
       <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-        <button 
+        <button
+          type="button"
           onClick={handleOpenJournal}
-          className="glass-card p-5 hover:shadow-xl active:scale-95 relative z-10"
-          style={{ cursor: 'pointer' }}
+          className="glass-card p-5 hover:shadow-xl active:scale-95 cursor-pointer"
         >
           <div className="flex flex-col items-center gap-3">
             <div className="icon-container icon-container-sky shadow-md">
@@ -258,9 +266,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           </div>
         </button>
 
-        <button 
+        <button
+          type="button"
           onClick={onOpenScanner}
-          className="glass-card p-5 hover:shadow-xl active:scale-95"
+          className="glass-card p-5 hover:shadow-xl active:scale-95 cursor-pointer"
         >
           <div className="flex flex-col items-center gap-3">
             <div className="icon-container icon-container-champagne shadow-md">
@@ -283,7 +292,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             </div>
             <h3 className="text-base font-bold">Family Hub</h3>
           </div>
-          <button className="text-sm font-bold text-violet-600 hover:text-violet-700 transition-colors">
+          <button type="button" className="text-sm font-bold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer">
             View all
           </button>
         </div>
@@ -298,7 +307,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
               <p className="font-bold text-sm truncate">Grocery List</p>
               <p className="text-xs text-gray-600 font-medium mt-0.5">3 items remaining</p>
             </div>
-            <button className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm">
+            <button
+              type="button"
+              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm cursor-pointer"
+            >
               <CheckCircle2 className="w-5 h-5" />
             </button>
           </div>
@@ -312,7 +324,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
               <p className="font-bold text-sm truncate">Household Chores</p>
               <p className="text-xs text-gray-600 font-medium mt-0.5">2 tasks pending</p>
             </div>
-            <button className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm">
+            <button
+              type="button"
+              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm cursor-pointer"
+            >
               <CheckCircle2 className="w-5 h-5" />
             </button>
           </div>
@@ -328,9 +343,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
                 <h3 className="text-2xl font-bold">Journal Entry</h3>
                 <p className="text-sm text-gray-600 mt-1">Write and sync to Google Calendar</p>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={handleCloseJournal}
-                className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all shadow-sm"
+                className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all shadow-sm cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -355,8 +371,8 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
 
       {/* SOS Alert Overlay */}
       {showSOSAlert && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
-          <div className="glass-card-rose p-8 max-w-sm w-full text-center shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-fade-in">
+          <div className="glass-card-rose p-8 max-w-sm w-full text-center shadow-2xl animate-scale-in">
             <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl">
               <Shield size={40} className="text-white" />
             </div>
@@ -364,9 +380,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             <p className="text-gray-700 mb-7 text-sm font-medium leading-relaxed">
               Your location has been shared with your emergency contacts. Stay safe.
             </p>
-            <button 
+            <button
+              type="button"
               onClick={() => setShowSOSAlert(false)}
-              className="btn-primary-glass w-full shadow-lg"
+              className="btn-primary-glass w-full shadow-lg cursor-pointer"
             >
               I'm Safe Now
             </button>
