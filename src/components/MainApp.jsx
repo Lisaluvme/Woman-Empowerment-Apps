@@ -23,6 +23,10 @@ const MainApp = () => {
     else if (path === '/profile') setActiveTab('profile');
     else if (path === '/safety') setActiveTab('safety');
     else if (path === '/calendar') setActiveTab('calendar');
+    else if (path === '/journal') {
+      // Redirect journal URL to home page
+      window.location.href = '/';
+    }
     else setActiveTab('home');
   }, [location]);
 
