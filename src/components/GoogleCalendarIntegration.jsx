@@ -127,8 +127,11 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
     try {
       await refreshAccessToken();
 
-      // Create event from journal entry
-      const startTime = new Date(journalEntry.createdAt);
+      // Create event from journal entry - use entryDateTime if available, else createdAt
+      const entryTime = journalEntry.entryDateTime
+        ? new Date(journalEntry.entryDateTime)
+        : new Date(journalEntry.createdAt);
+      const startTime = entryTime;
       const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // +1 hour
 
       const event = await createCalendarEvent({
