@@ -111,7 +111,6 @@ button, a, .glass-card, .btn-primary-glass, .btn-secondary-glass {
 .app-content {
   flex: 1;
   overflow: auto;
-  padding-bottom: 6rem;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -295,8 +294,10 @@ button, a, .glass-card, .btn-primary-glass, .btn-secondary-glass {
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   padding-bottom: env(safe-area-inset-bottom);
+  padding-top: 0.75rem;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.04);
   z-index: 50;
+  min-height: 5rem;
 }
 
 .nav-item-glass {
@@ -1024,7 +1025,18 @@ select {
 /* Safe area padding for notch phones */
 @supports (padding: env(safe-area-inset-bottom)) {
   .app-content {
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Ensure app content has enough padding for bottom nav with floating button */
+.app-content {
+  padding-bottom: 8rem;
+}
+
+@media (max-width: 640px) {
+  .app-content {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0rem));
   }
 }
 
@@ -1069,6 +1081,60 @@ input:-webkit-autofill:focus,
 textarea:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 200px #fff inset;
   outline: none;
+}
+
+/* Date and Time Input Styling for Desktop Browsers */
+input[type="date"],
+input[type="time"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* Date input calendar icon styling */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+  opacity: 0.6;
+  padding: 0.5rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  color: var(--color-lavender-end);
+}
+
+/* Firefox date/time input styling */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field {
+  padding: 0;
 }
 
 /* Loading state for mobile */
