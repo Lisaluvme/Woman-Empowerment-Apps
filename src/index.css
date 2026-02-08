@@ -66,6 +66,22 @@ body {
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Prevent text selection on touch */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Allow text selection only on inputs */
+  input, textarea, [contenteditable] {
+    -webkit-touch-callout: text;
+  }
+}
+
+/* Prevent zoom on double tap for mobile */
+button, a, .glass-card, .btn-primary-glass, .btn-secondary-glass {
+  touch-action: manipulation;
 }
 
 /* App Shell */
@@ -949,4 +965,241 @@ textarea:focus-visible {
 
 .animate-bounce-in {
   animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   MOBILE UI OPTIMIZATIONS
+   ============================================================ */
+
+/* Ensure proper touch target sizes (min 44x44px for iOS) */
+button, a, .glass-card {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Large buttons get even bigger touch targets */
+.btn-primary-glass, .sos-button-premium, .fab-glass {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Input fields with proper touch targets */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="tel"],
+textarea,
+select {
+  min-height: 44px;
+  font-size: 16px; /* Prevents iOS auto-zoom on focus */
+}
+
+/* Better touch feedback */
+@media (hover: none) and (pointer: coarse) {
+  /* For touch devices, show active state on tap */
+  button:active,
+  a:active,
+  .glass-card:active {
+    opacity: 0.8;
+    transform: scale(0.97);
+  }
+
+  /* Remove hover effects on touch devices */
+  .glass-card:hover {
+    transform: none;
+  }
+
+  button:hover {
+    transform: none;
+  }
+}
+
+/* Improved bottom navigation for mobile with safe area */
+.bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+/* Safe area padding for notch phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .app-content {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Prevent overscroll bounce on iOS */
+body {
+  overscroll-behavior-y: none;
+}
+
+.app-content {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth momentum scrolling for iOS */
+.app-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Better focus states for mobile keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #8B5CF6;
+  outline-offset: 2px;
+}
+
+/* Input autofill styling for mobile */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 200px #fff inset;
+  outline: none;
+}
+
+/* Loading state for mobile */
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Press feedback animation for mobile */
+@keyframes pressDown {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.press-feedback:active {
+  animation: pressDown 0.2s ease-out;
+}
+
+/* Safe area insets for all modals */
+.modal-overlay {
+  padding: env(safe-area-inset-top) env(safe-area-inset-bottom);
+}
+
+/* Improved modal for mobile */
+@media (max-width: 640px) {
+  .glass-card {
+    margin: 0.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .glass-card-lavender,
+  .glass-card-rose {
+    margin: 0.5rem;
+  }
+
+  .hero-card {
+    padding: 1.25rem;
+    margin: 0.5rem;
+    border-radius: 1.5rem;
+  }
+}
+
+/* Better responsive grid for mobile */
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  /* Adjust text sizes for mobile */
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+}
+
+/* Touch-friendly action buttons */
+@media (pointer: coarse) {
+  /* Increase touch targets for touch devices */
+  .glass-card {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Better spacing for touch */
+  button, a {
+    margin: 0.25rem;
+  }
+}
+
+/* Status bar appearance integration with iOS */
+@supports (padding: env(safe-area-inset-top)) {
+  .app-header {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .app-header .safe-area-top {
+    padding-top: 0; /* Already handled by parent */
+  }
+}
+
+/* Prevent text selection on mobile during normal interaction */
+@media (max-width: 768px) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Allow text selection only in specific areas */
+  input, textarea, [contenteditable="true"],
+  .selectable-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+/* Optimized scroll performance for mobile */
+@media (max-width: 768px) {
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce animations on mobile for better performance */
+  .animate-fade-in-up,
+  .animate-slide-in-up,
+  .animate-bounce-in {
+    animation-duration: 0.3s;
+  }
 }
