@@ -19,9 +19,12 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!title.trim() || !content.trim()) {
-      setMessage('Please fill in both title and content');
+      setMessage({
+        type: 'error',
+        text: 'Please fill in both title and content'
+      });
       return;
     }
 
@@ -40,10 +43,10 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
       };
 
       const docRef = await addDoc(collection(db, 'journals'), journalData);
-      
+
       setMessage({
         type: 'success',
-        text: '✅ Journal entry saved successfully!'
+        text: 'Journal entry saved successfully!'
       });
 
       // Reset form
@@ -65,7 +68,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
       console.error('Error saving journal:', error);
       setMessage({
         type: 'error',
-        text: '❌ Failed to save journal entry. Please try again.'
+        text: 'Failed to save journal entry. Please try again.'
       });
     } finally {
       setIsSubmitting(false);
@@ -73,10 +76,10 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-3">
-        <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
+        <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-lg animate-glow">
           <CalendarIcon className="w-6 h-6 text-white" />
         </div>
         <div>
@@ -85,27 +88,27 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
         </div>
       </div>
 
-      {/* Success Message */}
+      {/* Success/Error Message */}
       {message && (
-        <div className={`rounded-xl p-4 flex items-start space-x-3 ${
-          message.type === 'success' 
-            ? 'bg-green-50 text-green-700' 
-            : 'bg-red-50 text-red-700'
+        <div className={`rounded-2xl p-4 flex items-start space-x-3 animate-bounce-in ${
+          message.type === 'success'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
           {message.type === 'success' ? (
             <Check className="w-5 h-5 flex-shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           )}
-          <p className="text-sm">{message.text}</p>
+          <p className="text-sm font-medium">{message.text}</p>
         </div>
       )}
 
       {/* Journal Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title Input */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+          <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-2">
             Title
           </label>
           <input
@@ -114,14 +117,14 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter journal title..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
             disabled={isSubmitting}
           />
         </div>
 
         {/* Content Textarea */}
-        <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-2">
             Content
           </label>
           <textarea
@@ -130,33 +133,35 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your journal entry here..."
             rows={6}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 resize-none bg-white/80 backdrop-blur-sm"
             disabled={isSubmitting}
           />
         </div>
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSubmitting || !title.trim() || !content.trim()}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center space-x-2"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Saving...</span>
-            </>
-          ) : (
-            <>
-              <Plus className="w-5 h-5" />
-              <span>Save Journal Entry</span>
-            </>
-          )}
-        </button>
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+          <button
+            type="submit"
+            disabled={isSubmitting || !title.trim() || !content.trim()}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5" />
+                <span>Save Journal Entry</span>
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
       {/* Info Box */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
         <p className="text-sm text-gray-700">
           <span className="font-semibold">💡 Tip:</span> After saving, connect to Google Calendar
           below to auto-sync this entry. Each entry becomes a 1-hour event on your calendar.

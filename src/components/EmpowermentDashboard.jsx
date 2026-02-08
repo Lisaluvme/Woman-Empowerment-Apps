@@ -14,7 +14,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showSOSAlert, setShowSOSAlert] = useState(false);
-  
+
   // Career progress
   const careerGoal = { current: 7, target: 10 };
   const progressPercent = (careerGoal.current / careerGoal.target) * 100;
@@ -76,15 +76,17 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   return (
     <div className="px-5 py-6 max-w-lg mx-auto space-y-5">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between animate-fade-in-up">
+      <div className="flex items-center justify-between animate-slide-in-down">
         <div>
-          <h2 className="text-3xl font-bold mb-1">Good evening</h2>
+          <h2 className="text-3xl font-bold mb-1 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent animate-gradient">
+            Good evening
+          </h2>
           <p className="text-sm text-gray-500 font-medium">Here's your overview for today</p>
         </div>
         <div className="text-right">
-          <div className="glass-badge bg-gradient-to-r from-violet-100 to-purple-100 border-2 border-violet-200">
+          <div className="glass-badge animate-floating">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-600" />
+              <Sparkles className="w-4 h-4 text-violet-600 animate-sparkle" />
               <span className="text-lg font-bold text-violet-700">{empowermentPoints}</span>
             </div>
           </div>
@@ -93,9 +95,9 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </div>
 
       {/* HERO COMMAND CENTER CARD */}
-      <div className="hero-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+      <div className="hero-card animate-bounce-in" style={{ animationDelay: '0.1s' }}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="icon-container icon-container-lavender shadow-lg">
+          <div className="icon-container icon-container-lavender shadow-lg animate-glow">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -105,16 +107,16 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="glass-card p-4 text-center">
+        <div className="grid grid-cols-3 gap-3 mb-6 stagger-children" style="--stagger-delay: 1">
+          <div className="glass-card p-4 text-center hover-lift">
             <div className="text-2xl font-bold text-violet-600 mb-1">{careerGoal.current}</div>
             <div className="text-xs text-gray-600 font-medium">Skills</div>
           </div>
-          <div className="glass-card p-4 text-center">
+          <div className="glass-card p-4 text-center hover-lift" style={{ animationDelay: '0.1s' }}>
             <div className="text-2xl font-bold text-amber-600 mb-1">{empowermentPoints}</div>
             <div className="text-xs text-gray-600 font-medium">Points</div>
           </div>
-          <div className="glass-card p-4 text-center">
+          <div className="glass-card p-4 text-center hover-lift" style={{ animationDelay: '0.2s' }}>
             <div className="text-2xl font-bold text-emerald-600 mb-1">3</div>
             <div className="text-xs text-gray-600 font-medium">Tasks</div>
           </div>
@@ -124,7 +126,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         <button
           type="button"
           onClick={triggerSOS}
-          className="sos-button-premium w-full cursor-pointer"
+          className="sos-button-premium w-full animate-pulse-gentle"
         >
           <div className="flex items-center justify-center gap-3">
             <Shield size={26} />
@@ -134,10 +136,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </div>
 
       {/* SAFETY TIMER SECTION */}
-      <div className="glass-card-rose p-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+      <div className="glass-card-rose p-6 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="icon-container icon-container-rose">
+            <div className={`icon-container icon-container-rose ${isTimerActive ? 'animate-pulse-gentle' : ''}`}>
               <Clock className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -159,7 +161,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             type="button"
             onClick={handleStartTimer}
             disabled={isTimerActive}
-            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 ${
               isTimerActive
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : 'btn-primary-glass hover:shadow-lg cursor-pointer'
@@ -171,10 +173,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             type="button"
             onClick={handleStopTimer}
             disabled={!isTimerActive}
-            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 ${
               !isTimerActive
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-800 text-white hover:bg-gray-900 active:scale-95 cursor-pointer'
+                : 'bg-gray-800 text-white hover:bg-gray-900 cursor-pointer'
             }`}
           >
             Stop
@@ -182,7 +184,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           <button
             type="button"
             onClick={handleCheckIn}
-            className="flex-1 py-3 px-4 rounded-2xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 transition-all duration-200 shadow-lg cursor-pointer"
+            className="flex-1 py-3 px-4 rounded-2xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all duration-300 shadow-lg cursor-pointer hover-lift"
           >
             Check-in
           </button>
@@ -190,7 +192,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </div>
 
       {/* CAREER PROGRESS SECTION */}
-      <div className="glass-card-lavender p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+      <div className="glass-card-lavender p-6 animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
         <div className="flex items-center gap-3 mb-5">
           <div className="icon-container icon-container-lavender">
             <Target className="w-4 h-4 text-white" />
@@ -208,7 +210,9 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold text-gradient-lavender">{progressPercent.toFixed(0)}%</p>
+              <p className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                {progressPercent.toFixed(0)}%
+              </p>
               <div className="flex items-center justify-end gap-1 mt-1">
                 <TrendingUp className="w-3 h-3 text-violet-600" />
                 <span className="text-xs text-violet-600 font-semibold">On track</span>
@@ -217,9 +221,9 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           </div>
 
           <div className="progress-bar-glass">
-            <div 
+            <div
               className="progress-fill-glass"
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: `${progressPercent}%`, transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
             ></div>
           </div>
         </div>
@@ -229,7 +233,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           <button
             type="button"
             onClick={() => setEmpowermentPoints(p => p + 100)}
-            className="btn-secondary-glass hover:shadow-md active:scale-95 cursor-pointer"
+            className="btn-secondary-glass hover:shadow-md cursor-pointer hover-lift"
           >
             <div className="flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" />
@@ -238,7 +242,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
           </button>
           <button
             type="button"
-            className="btn-secondary-glass hover:shadow-md active:scale-95 cursor-pointer"
+            className="btn-secondary-glass hover:shadow-md cursor-pointer hover-lift"
           >
             <div className="flex items-center justify-center gap-2">
               <Target className="w-4 h-4" />
@@ -249,14 +253,14 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </div>
 
       {/* QUICK ACTIONS */}
-      <div className="grid grid-cols-2 gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+      <div className="grid grid-cols-2 gap-4 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
         <button
           type="button"
           onClick={handleOpenJournal}
-          className="glass-card p-5 hover:shadow-xl active:scale-95 cursor-pointer"
+          className="glass-card p-5 cursor-pointer hover-lift group"
         >
           <div className="flex flex-col items-center gap-3">
-            <div className="icon-container icon-container-sky shadow-md">
+            <div className="icon-container icon-container-sky shadow-md group-hover:animate-bounce-subtle">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
             <div className="text-center">
@@ -269,10 +273,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         <button
           type="button"
           onClick={onOpenScanner}
-          className="glass-card p-5 hover:shadow-xl active:scale-95 cursor-pointer"
+          className="glass-card p-5 cursor-pointer hover-lift group"
         >
           <div className="flex flex-col items-center gap-3">
-            <div className="icon-container icon-container-champagne shadow-md">
+            <div className="icon-container icon-container-champagne shadow-md group-hover:animate-bounce-subtle">
               <Camera className="w-6 h-6 text-white" />
             </div>
             <div className="text-center">
@@ -284,7 +288,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       </div>
 
       {/* FAMILY SECTION */}
-      <div className="glass-card p-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+      <div className="glass-card p-6 animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <div className="icon-container icon-container-lavender">
@@ -292,14 +296,14 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             </div>
             <h3 className="text-base font-bold">Family Hub</h3>
           </div>
-          <button type="button" className="text-sm font-bold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer">
+          <button type="button" className="text-sm font-bold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer hover-lift">
             View all
           </button>
         </div>
 
         <div className="space-y-3">
           {/* Task Item */}
-          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all duration-300 hover-lift">
             <div className="icon-container icon-container-sky">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
@@ -309,14 +313,14 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             </div>
             <button
               type="button"
-              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm cursor-pointer"
+              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 shadow-sm cursor-pointer hover:scale-110"
             >
               <CheckCircle2 className="w-5 h-5" />
             </button>
           </div>
 
           {/* Task Item */}
-          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all">
+          <div className="flex items-center gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 hover:shadow-md transition-all duration-300 hover-lift">
             <div className="icon-container icon-container-champagne">
               <Target className="w-5 h-5 text-white" />
             </div>
@@ -326,7 +330,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             </div>
             <button
               type="button"
-              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm cursor-pointer"
+              className="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 shadow-sm cursor-pointer hover:scale-110"
             >
               <CheckCircle2 className="w-5 h-5" />
             </button>
@@ -337,7 +341,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       {/* Journal Modal Overlay */}
       {showJournalModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto">
-          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-scale-in">
+          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold">Journal Entry</h3>
@@ -346,20 +350,20 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
               <button
                 type="button"
                 onClick={handleCloseJournal}
-                className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all shadow-sm cursor-pointer"
+                className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 shadow-sm cursor-pointer hover:scale-110"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <JournalWithCalendar 
+
+            <JournalWithCalendar
               user={user}
               onJournalCreated={handleJournalCreated}
             />
-            
+
             {/* Calendar Integration Preview */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <GoogleCalendarIntegration 
+              <GoogleCalendarIntegration
                 user={user}
                 journalEntry={currentJournalEntry}
                 onSyncSuccess={handleCalendarSyncSuccess}
@@ -372,8 +376,8 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
       {/* SOS Alert Overlay */}
       {showSOSAlert && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-fade-in">
-          <div className="glass-card-rose p-8 max-w-sm w-full text-center shadow-2xl animate-scale-in">
-            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl">
+          <div className="glass-card-rose p-8 max-w-sm w-full text-center shadow-2xl animate-bounce-in">
+            <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl animate-pulse-gentle">
               <Shield size={40} className="text-white" />
             </div>
             <h3 className="text-2xl font-bold mb-2">Emergency Alert Sent!</h3>
@@ -383,7 +387,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
             <button
               type="button"
               onClick={() => setShowSOSAlert(false)}
-              className="btn-primary-glass w-full shadow-lg cursor-pointer"
+              className="btn-primary-glass w-full shadow-lg cursor-pointer hover-lift"
             >
               I'm Safe Now
             </button>

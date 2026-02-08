@@ -64,7 +64,7 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
       setIsConnected(true);
       setSyncStatus('✅ Successfully connected to Google Calendar!');
       setTimeout(() => setSyncStatus(''), 3000);
-      
+
       // Fetch events after connection
       await fetchEvents();
     } catch (err) {
@@ -139,7 +139,7 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
       });
 
       setSyncStatus('✅ Journal synced to Google Calendar!');
-      
+
       // Store Google event ID in journal entry (for future updates)
       if (onSyncSuccess) {
         onSyncSuccess(event.id, event.htmlLink);
@@ -166,7 +166,7 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
     try {
       await refreshAccessToken();
       await deleteCalendarEvent(eventId);
-      
+
       // Remove from local state
       setEvents(events.filter(e => e.id !== eventId));
       setSyncStatus('✅ Event deleted');
@@ -193,11 +193,11 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 space-y-6">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/90 p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+          <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg animate-glow">
             <Calendar className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -208,7 +208,7 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
 
         {/* Connection Status Badge */}
         {isConnected && (
-          <div className="flex items-center space-x-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium">
+          <div className="flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium border border-emerald-200 animate-pulse-gentle">
             <CalendarCheck className="w-4 h-4" />
             <span>Connected</span>
           </div>
@@ -217,8 +217,8 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
 
       {/* Connection Button */}
       {!isConnected ? (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 text-center border border-blue-100 animate-slide-in-up">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg animate-floating">
             <CalendarDays className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -228,9 +228,10 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
             Sync your journal entries to your Google Calendar automatically
           </p>
           <button
+            type="button"
             onClick={handleConnect}
             disabled={isConnecting || !isInitialized}
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
           >
             {isConnecting ? (
               <>
@@ -245,28 +246,30 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
             )}
           </button>
           {!isInitialized && (
-            <p className="text-xs text-gray-500 mt-2">Initializing...</p>
+            <p className="text-xs text-gray-500 mt-2 animate-pulse">Initializing...</p>
           )}
         </div>
       ) : (
         <div className="space-y-4">
           {/* Action Buttons */}
-          <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
+          <div className="flex items-center justify-between bg-gray-50/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
             <div className="flex items-center space-x-2">
               <RefreshCw className="w-5 h-5 text-gray-600" />
-              <span className="text-sm text-gray-700">Refresh events</span>
+              <span className="text-sm text-gray-700 font-medium">Refresh events</span>
             </div>
             <div className="flex space-x-2">
               <button
+                type="button"
                 onClick={fetchEvents}
                 disabled={isLoadingEvents}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all duration-300 disabled:opacity-50 cursor-pointer hover:shadow-md hover:-translate-y-0.5"
               >
                 {isLoadingEvents ? 'Loading...' : 'Refresh'}
               </button>
               <button
+                type="button"
                 onClick={handleDisconnect}
-                className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 transition-all duration-300 cursor-pointer hover:shadow-md hover:-translate-y-0.5"
               >
                 Disconnect
               </button>
@@ -275,7 +278,11 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
 
           {/* Sync Status */}
           {syncStatus && (
-            <div className={`text-sm ${syncStatus.includes('✅') ? 'text-green-600' : 'text-blue-600'}`}>
+            <div className={`text-sm font-medium p-3 rounded-xl animate-slide-in-up ${
+              syncStatus.includes('✅')
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}>
               {syncStatus}
             </div>
           )}
@@ -283,21 +290,22 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
           {/* Upcoming Events */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <CalendarDays className="w-4 h-4 mr-2" />
+              <CalendarDays className="w-4 h-4 mr-2 text-blue-600" />
               Upcoming Events
             </h3>
-            
+
             {events.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-xl">
+              <div className="text-center py-8 bg-gray-50/80 backdrop-blur-sm rounded-xl border border-gray-200">
                 <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-500 text-sm">No upcoming events</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {events.map((event) => (
+                {events.map((event, index) => (
                   <div
                     key={event.id}
-                    className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors group"
+                    className="bg-gray-50/80 backdrop-blur-sm rounded-xl p-4 hover:bg-gray-100 transition-all duration-300 group hover:shadow-md hover:-translate-y-0.5 animate-slide-in-up"
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -313,19 +321,20 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-4">
                         <a
                           href={event.htmlLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 hover:scale-110"
                           title="View in Google Calendar"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
                         <button
+                          type="button"
                           onClick={() => handleDeleteEvent(event.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-110 cursor-pointer"
                           title="Delete event"
                         >
                           <X className="w-4 h-4" />
@@ -342,8 +351,8 @@ const GoogleCalendarIntegration = ({ user, journalEntry, onSyncSuccess }) => {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 animate-shake">
+          <p className="text-sm text-red-700 font-medium">{error}</p>
         </div>
       )}
     </div>
