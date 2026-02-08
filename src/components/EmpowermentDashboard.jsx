@@ -5,7 +5,7 @@ import { auth } from '../firebase-config';
 import JournalWithCalendar from './JournalWithCalendar';
 import GoogleCalendarIntegration from './GoogleCalendarIntegration';
 
-const EmpowermentDashboard = ({ onOpenScanner }) => {
+const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreatedProp }) => {
   const [user] = useAuthState(auth);
   const [showJournalModal, setShowJournalModal] = useState(false);
   const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
@@ -59,6 +59,10 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
   };
   const handleJournalCreated = (journalEntry) => {
     setCurrentJournalEntry(journalEntry);
+    // Notify parent component (MainApp) to handle calendar sync
+    if (onJournalCreatedProp) {
+      onJournalCreatedProp(journalEntry);
+    }
     // Keep modal open to allow user to see success message and connect to Google Calendar
     // User can manually close with X button
   };
@@ -107,7 +111,7 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6 stagger-children" style="--stagger-delay: 1">
+        <div className="grid grid-cols-3 gap-3 mb-6 stagger-children" style={{ '--stagger-delay': '1' }}>
           <div className="glass-card p-4 text-center hover-lift">
             <div className="text-2xl font-bold text-violet-600 mb-1">{careerGoal.current}</div>
             <div className="text-xs text-gray-600 font-medium">Skills</div>

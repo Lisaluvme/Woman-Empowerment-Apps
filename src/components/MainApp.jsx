@@ -7,8 +7,7 @@ import VaultGallery from './VaultGallery';
 import DocumentScanner from './DocumentScanner';
 import Profile from './Profile';
 import GoogleCalendarIntegration from './GoogleCalendarIntegration';
-import JournalWithCalendar from './JournalWithCalendar';
-import { Home, Shield, FolderOpen, User, Plus, Bell, Calendar } from 'lucide-react';
+import { Home, Shield, FolderOpen, User, Plus, Bell } from 'lucide-react';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -24,7 +23,6 @@ const MainApp = () => {
     else if (path === '/profile') setActiveTab('profile');
     else if (path === '/safety') setActiveTab('safety');
     else if (path === '/calendar') setActiveTab('calendar');
-    else if (path === '/journal') setActiveTab('journal');
     else setActiveTab('home');
   }, [location]);
 
@@ -55,35 +53,26 @@ const MainApp = () => {
 
   const renderScreen = () => {
     switch (activeTab) {
-      case 'home': 
-        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
-      case 'vault': 
+      case 'home':
+        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} onJournalCreated={handleJournalCreated} />;
+      case 'vault':
         return <VaultGallery onOpenScanner={() => setShowScanner(true)} />;
       case 'safety':
-        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
-      case 'profile': 
+        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} onJournalCreated={handleJournalCreated} />;
+      case 'profile':
         return <Profile onLogout={handleLogout} />;
       case 'calendar':
         return (
           <div className="content-container">
-            <GoogleCalendarIntegration 
+            <GoogleCalendarIntegration
               user={user}
               journalEntry={currentJournalEntry}
               onSyncSuccess={handleCalendarSyncSuccess}
             />
           </div>
         );
-      case 'journal':
-        return (
-          <div className="content-container">
-            <JournalWithCalendar 
-              user={user}
-              onJournalCreated={handleJournalCreated}
-            />
-          </div>
-        );
-      default: 
-        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} />;
+      default:
+        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} onJournalCreated={handleJournalCreated} />;
     }
   };
 
@@ -103,7 +92,10 @@ const MainApp = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center hover:scale-105 transition-all">
+            <button
+              type="button"
+              className="w-11 h-11 rounded-2xl glass-card flex items-center justify-center hover:scale-105 transition-all cursor-pointer"
+            >
               <Bell className="w-5 h-5 text-gray-600" />
             </button>
             <div className="avatar-glass">
@@ -120,20 +112,21 @@ const MainApp = () => {
 
       {/* Global Document Scanner Overlay */}
       {showScanner && (
-        <DocumentScanner 
+        <DocumentScanner
           onSave={(doc) => {
             console.log("Document saved successfully:", doc);
             setShowScanner(false);
             setActiveTab('vault');
-          }} 
-          onCancel={() => setShowScanner(false)} 
+          }}
+          onCancel={() => setShowScanner(false)}
         />
       )}
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
         <div className="flex justify-around items-center px-3 py-3">
-          <button 
+          <button
+            type="button"
             onClick={() => setActiveTab('home')}
             className={`nav-item-glass ${activeTab === 'home' ? 'active' : ''}`}
           >
@@ -141,7 +134,8 @@ const MainApp = () => {
             <span className="text-xs font-semibold">Home</span>
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => setActiveTab('vault')}
             className={`nav-item-glass ${activeTab === 'vault' ? 'active' : ''}`}
           >
@@ -150,14 +144,16 @@ const MainApp = () => {
           </button>
 
           {/* Floating Scanner Button */}
-          <button 
+          <button
+            type="button"
             onClick={() => setShowScanner(true)}
-            className="fab-glass relative -mt-8 w-16 h-16 rounded-3xl flex items-center justify-center"
+            className="fab-glass relative -mt-8 w-16 h-16 rounded-3xl flex items-center justify-center cursor-pointer"
           >
             <Plus size={32} className="text-white" strokeWidth={2.5} />
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => setActiveTab('safety')}
             className={`nav-item-glass ${activeTab === 'safety' ? 'active' : ''}`}
           >
@@ -165,20 +161,13 @@ const MainApp = () => {
             <span className="text-xs font-semibold">Safety</span>
           </button>
 
-          <button 
+          <button
+            type="button"
             onClick={() => setActiveTab('profile')}
             className={`nav-item-glass ${activeTab === 'profile' ? 'active' : ''}`}
           >
             <User size={23} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
             <span className="text-xs font-semibold">Account</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('journal')}
-            className={`nav-item-glass ${activeTab === 'journal' ? 'active' : ''}`}
-          >
-            <Calendar size={23} strokeWidth={activeTab === 'journal' ? 2.5 : 2} />
-            <span className="text-xs font-semibold">Journal</span>
           </button>
         </div>
       </nav>
