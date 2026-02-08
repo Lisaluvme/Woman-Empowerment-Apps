@@ -10,23 +10,55 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
+// Check if request should be cached (skip chrome-extension, etc.)
+const shouldCache = (request) => {
+  const url = new URL(request.url);
+
+  // Skip caching for chrome extensions, dev tools, and other unsupported schemes
+  if (url.protocol === 'chrome-extension:' ||
+      url.protocol === 'moz-extension:' ||
+      url.protocol === 'extension:' ||
+      url.protocol === 'about:') {
+    return false;
+  }
+
+  // Skip caching for non-HTTP(S) requests
+  if (!url.protocol.startsWith('http')) {
+    return false;
+  }
+
+  return true;
+};
+
 // Beautiful caching strategies
 const cacheFirstStrategy = async (request) => {
+  if (!shouldCache(request)) {
+    return fetch(request);
+  }
+
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
     return cachedResponse;
   }
   const networkResponse = await fetch(request);
-  const cache = await caches.open(CACHE_NAME);
-  cache.put(request, networkResponse.clone());
+  if (networkResponse && networkResponse.status === 200) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, networkResponse.clone());
+  }
   return networkResponse;
 };
 
 const networkFirstStrategy = async (request) => {
+  if (!shouldCache(request)) {
+    return fetch(request);
+  }
+
   try {
     const networkResponse = await fetch(request);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, networkResponse.clone());
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
     return networkResponse;
   } catch (error) {
     const cachedResponse = await caches.match(request);
@@ -73,13 +105,18 @@ self.addEventListener('activate', (event) => {
 // Fetch event - intelligent caching with beautiful strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  
+
+  // Skip caching for chrome-extension and other unsupported schemes
+  if (!shouldCache(request)) {
+    return;
+  }
+
   // Cache static assets (CSS, JS, images)
-  if (request.destination === 'style' || 
-      request.destination === 'script' || 
+  if (request.destination === 'style' ||
+      request.destination === 'script' ||
       request.destination === 'image') {
     event.respondWith(cacheFirstStrategy(request));
-  } 
+  }
   // Network-first for API calls
   else if (request.url.includes('/api/')) {
     event.respondWith(networkFirstStrategy(request));
