@@ -144,9 +144,9 @@ const DocumentScanner = ({ onSave, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-teal-900/80 via-black/80 to-red-900/80 flex flex-col items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-gradient-to-br from-teal-900/80 via-black/80 to-red-900/80 flex items-center justify-center p-4 z-50 overflow-y-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
       {!capturedImage ? (
-        <div className="relative w-full max-w-sm aspect-[3/4] bg-gray-900 rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
+        <div className="relative w-full max-w-sm aspect-[3/4] bg-gray-900 rounded-lg overflow-hidden border-2 border-dashed border-gray-600 my-auto">
           {!isCameraOpen ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
               <div className="bg-gray-800 rounded-full p-4 mb-4">
@@ -156,16 +156,17 @@ const DocumentScanner = ({ onSave, onCancel }) => {
               <p className="text-sm text-gray-300 text-center mb-6">
                 Position your document within the frame for best results
               </p>
-              
+
               <div className="space-y-3 w-full">
-                <button 
+                <button
+                  type="button"
                   onClick={startCamera}
-                  className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Camera size={20} />
                   Open Camera
                 </button>
-                
+
                 <div className="relative">
                   <input
                     type="file"
@@ -173,7 +174,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <button className="w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-bold hover:bg-gray-600 transition-colors flex items-center justify-center gap-2">
+                  <button type="button" className="w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-bold hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 pointer-events-none">
                     Upload Photo
                   </button>
                 </div>
@@ -183,35 +184,38 @@ const DocumentScanner = ({ onSave, onCancel }) => {
             <>
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
-                <button 
+                <button
+                  type="button"
                   onClick={takePhoto}
-                  className="w-16 h-16 bg-white rounded-full border-4 border-teal-500 shadow-xl flex items-center justify-center"
+                  className="w-16 h-16 bg-white rounded-full border-4 border-teal-500 shadow-xl flex items-center justify-center cursor-pointer"
                 >
                   <div className="w-8 h-8 bg-teal-500 rounded-full"></div>
                 </button>
               </div>
             </>
           )}
-          
-          <button 
-            onClick={onCancel} 
-            className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all"
+
+          <button
+            type="button"
+            onClick={onCancel}
+            className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all cursor-pointer z-10"
           >
             <X size={24} />
           </button>
         </div>
       ) : (
-        <div className="w-full max-w-sm flex flex-col gap-4 bg-white rounded-2xl p-6 shadow-2xl">
+        <div className="w-full max-w-sm flex flex-col gap-4 bg-white rounded-2xl p-6 shadow-2xl my-auto">
           <div className="relative">
-            <img src={capturedImage} alt="Preview" className="rounded-lg shadow-lg border-2 border-gray-200 w-full" />
+            <img src={capturedImage} alt="Preview" className="rounded-lg shadow-lg border-2 border-gray-200 w-full max-h-48 object-contain bg-gray-100" />
             <button
+              type="button"
               onClick={() => {
                 setCapturedImage(null);
                 setError('');
                 setDocTitle('');
                 setDocCategory('personal');
               }}
-              className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all"
+              className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all cursor-pointer"
             >
               <RefreshCw size={16} />
             </button>
@@ -220,10 +224,11 @@ const DocumentScanner = ({ onSave, onCancel }) => {
           {/* Document Details Form */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="docTitle" className="block text-sm font-semibold text-gray-700 mb-2">
                 Document Title *
               </label>
               <input
+                id="docTitle"
                 type="text"
                 value={docTitle}
                 onChange={(e) => setDocTitle(e.target.value)}
@@ -234,10 +239,11 @@ const DocumentScanner = ({ onSave, onCancel }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="docCategory" className="block text-sm font-semibold text-gray-700 mb-2">
                 Category
               </label>
               <select
+                id="docCategory"
                 value={docCategory}
                 onChange={(e) => setDocCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:outline-none transition-colors bg-white"
@@ -255,16 +261,18 @@ const DocumentScanner = ({ onSave, onCancel }) => {
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={onCancel}
               disabled={isSaving}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
               disabled={isSaving || !docTitle.trim()}
-              className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+              className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
               {isSaving ? (
                 <>
@@ -281,20 +289,21 @@ const DocumentScanner = ({ onSave, onCancel }) => {
           </div>
         </div>
       )}
-      
+
       {error && (
-        <div className="fixed top-4 left-4 right-4 bg-red-500 text-white p-3 rounded-lg flex items-center gap-2 shadow-lg">
+        <div className="fixed top-4 left-4 right-4 bg-red-500 text-white p-3 rounded-lg flex items-center gap-2 shadow-lg z-[60]">
           <AlertCircle size={20} />
-          <span>{error}</span>
-          <button 
+          <span className="text-sm">{error}</span>
+          <button
+            type="button"
             onClick={() => setError('')}
-            className="ml-auto text-white hover:text-gray-200"
+            className="ml-auto text-white hover:text-gray-200 cursor-pointer"
           >
             <X size={20} />
           </button>
         </div>
       )}
-      
+
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );

@@ -344,8 +344,8 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
 
       {/* Journal Modal Overlay */}
       {showJournalModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto">
-          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-bounce-in max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto" style={{ paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-bounce-in max-h-[85vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold">Journal Entry</h3>
