@@ -74,6 +74,7 @@ export const initializeGoogleIdentity = () => {
         tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: CALENDAR_SCOPE,
+          ux_mode: 'popup',
           callback: (response) => {
             if (response.access_token) {
               accessToken = response.access_token;
