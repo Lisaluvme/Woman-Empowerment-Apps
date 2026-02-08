@@ -6,7 +6,7 @@
 
 const GOOGLE_CLIENT_ID = '947408696329-0eprnf9okvvd85fi2fof5juitcg9sh82.apps.googleusercontent.com';
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
-const CALENDAR_API discovery_url = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+const CALENDAR_API_URL = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
 let tokenClient = null;
 let gisInited = false;
@@ -48,7 +48,7 @@ export const loadCalendarApi = async () => {
   }
 
   try {
-    await gapi.client.load(CALENDAR_API discovery_url);
+    await gapi.client.load(CALENDAR_API_URL);
     calendarApiLoaded = true;
     console.log('✅ Google Calendar API loaded');
   } catch (error) {
