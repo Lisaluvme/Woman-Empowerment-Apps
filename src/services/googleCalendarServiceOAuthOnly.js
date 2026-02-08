@@ -6,11 +6,13 @@
 
 const GOOGLE_CLIENT_ID = '947408696329-0eprnf9okvvd85fi2fof5juitcg9sh82.apps.googleusercontent.com';
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const CALENDAR_API discovery_url = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
 let tokenClient = null;
 let gisInited = false;
 let accessToken = null;
 let gapiLoaded = false;
+let calendarApiLoaded = false;
 
 /**
  * Load gapi.client with only OAuth (no API key needed)
@@ -38,6 +40,24 @@ export const loadGapiClient = () => {
 };
 
 /**
+ * Load the Calendar API discovery document
+ */
+export const loadCalendarApi = async () => {
+  if (calendarApiLoaded && gapi.client.calendar) {
+    return;
+  }
+
+  try {
+    await gapi.client.load(CALENDAR_API discovery_url);
+    calendarApiLoaded = true;
+    console.log('✅ Google Calendar API loaded');
+  } catch (error) {
+    console.error('❌ Failed to load Calendar API:', error);
+    throw error;
+  }
+};
+
+/**
  * Initialize Google Identity Services (GIS) for OAuth
  */
 export const initializeGoogleIdentity = () => {
@@ -60,10 +80,10 @@ export const initializeGoogleIdentity = () => {
               // Set the token for gapi.client
               gapi.client.setToken({ access_token: response.access_token });
               console.log('✅ Access token received and set');
-              
+
               // Store token in localStorage for persistence
               localStorage.setItem('google_calendar_token', response.access_token);
-              localStorage.setItem('google_token_expires_at', 
+              localStorage.setItem('google_token_expires_at',
                 Date.now() + (response.expires_in * 1000));
             }
           },
@@ -92,17 +112,19 @@ export const initializeGoogleServices = async () => {
   try {
     await loadGapiClient();
     await initializeGoogleIdentity();
-    
+
     // Check if we have a stored token
     const storedToken = localStorage.getItem('google_calendar_token');
     const expiresAt = localStorage.getItem('google_token_expires_at');
-    
+
     if (storedToken && expiresAt && Date.now() < parseInt(expiresAt)) {
       accessToken = storedToken;
       gapi.client.setToken({ access_token: accessToken });
       console.log('✅ Using stored access token');
+      // Load Calendar API when we have a valid token
+      await loadCalendarApi();
     }
-    
+
     return true;
   } catch (error) {
     console.error('❌ Failed to initialize Google services:', error);
@@ -122,9 +144,15 @@ export const requestGoogleCalendarAccess = () => {
 
     tokenClient.requestAccessToken({
       prompt: 'consent',
-      callback: (response) => {
+      callback: async (response) => {
         if (response.access_token) {
           console.log('✅ Token received via OAuth flow');
+          // Load Calendar API after getting the token
+          try {
+            await loadCalendarApi();
+          } catch (error) {
+            console.error('Failed to load Calendar API after OAuth:', error);
+          }
           resolve(response);
         } else if (response.error) {
           reject(new Error(response.error_description || response.error));
@@ -138,7 +166,7 @@ export const requestGoogleCalendarAccess = () => {
  * Check if user has valid Google Calendar access
  */
 export const hasGoogleCalendarAccess = () => {
-  return !!accessToken;
+  return !!accessToken && calendarApiLoaded;
 };
 
 /**
@@ -151,6 +179,7 @@ export const signOutGoogleCalendar = () => {
       google.accounts.oauth2.revoke(token.access_token);
     }
     accessToken = null;
+    calendarApiLoaded = false;
     localStorage.removeItem('google_calendar_token');
     localStorage.removeItem('google_token_expires_at');
     console.log('✅ Signed out from Google Calendar');
@@ -166,6 +195,10 @@ const makeCalendarRequest = async (request) => {
     throw new Error('No access token. Please connect Google Calendar first.');
   }
 
+  if (!calendarApiLoaded) {
+    throw new Error('Calendar API not loaded. Please connect Google Calendar first.');
+  }
+
   try {
     // Ensure token is set
     const token = gapi.client.getToken();
@@ -177,7 +210,7 @@ const makeCalendarRequest = async (request) => {
     return response;
   } catch (error) {
     console.error('❌ API request error:', error);
-    
+
     // If token expired, try to refresh
     if (error.status === 401) {
       console.log('🔄 Token expired, attempting refresh');
@@ -185,7 +218,7 @@ const makeCalendarRequest = async (request) => {
       // Retry the request
       return await request();
     }
-    
+
     throw error;
   }
 };
@@ -196,6 +229,10 @@ const makeCalendarRequest = async (request) => {
 export const createCalendarEvent = async (eventData) => {
   if (!accessToken) {
     throw new Error('No access token. Please connect Google Calendar first.');
+  }
+
+  if (!calendarApiLoaded) {
+    throw new Error('Calendar API not loaded. Please connect Google Calendar first.');
   }
 
   try {
@@ -241,6 +278,10 @@ export const fetchUpcomingEvents = async (maxResults = 10) => {
     throw new Error('No access token. Please connect Google Calendar first.');
   }
 
+  if (!calendarApiLoaded) {
+    throw new Error('Calendar API not loaded. Please connect Google Calendar first.');
+  }
+
   try {
     const now = new Date();
     const timeMin = now.toISOString();
@@ -272,6 +313,10 @@ export const deleteCalendarEvent = async (eventId) => {
     throw new Error('No access token. Please connect Google Calendar first.');
   }
 
+  if (!calendarApiLoaded) {
+    throw new Error('Calendar API not loaded. Please connect Google Calendar first.');
+  }
+
   try {
     await makeCalendarRequest(async () => {
       return await gapi.client.calendar.events.delete({
@@ -293,6 +338,10 @@ export const deleteCalendarEvent = async (eventId) => {
 export const updateCalendarEvent = async (eventId, eventData) => {
   if (!accessToken) {
     throw new Error('No access token. Please connect Google Calendar first.');
+  }
+
+  if (!calendarApiLoaded) {
+    throw new Error('Calendar API not loaded. Please connect Google Calendar first.');
   }
 
   try {
@@ -330,7 +379,7 @@ export const updateCalendarEvent = async (eventId, eventData) => {
  */
 export const refreshAccessToken = async () => {
   const expiresAt = localStorage.getItem('google_token_expires_at');
-  
+
   if (!expiresAt || Date.now() >= parseInt(expiresAt)) {
     console.log('🔄 Token expired, requesting new token');
     await requestGoogleCalendarAccess();
@@ -340,3 +389,4 @@ export const refreshAccessToken = async () => {
 // Export utility functions
 export const getAccessToken = () => accessToken;
 export const isInitialized = () => gisInited && gapiLoaded;
+export const isCalendarApiReady = () => calendarApiLoaded;
