@@ -52,21 +52,15 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
 
   // Journal handlers
   const handleOpenJournal = () => {
-    console.log('Journal button clicked!');
-    alert('Journal button was clicked! Modal should appear now.');
     setShowJournalModal(true);
-    console.log('showJournalModal set to true:', showJournalModal);
   };
   const handleCloseJournal = () => {
-    console.log('Close journal clicked');
     setShowJournalModal(false);
   };
   const handleJournalCreated = (journalEntry) => {
     setCurrentJournalEntry(journalEntry);
-    // Auto-switch to show calendar after journal creation
-    setTimeout(() => {
-      setShowJournalModal(false);
-    }, 1500);
+    // Keep modal open to allow user to see success message and connect to Google Calendar
+    // User can manually close with X button
   };
   const handleCalendarSyncSuccess = (eventId, eventLink) => {
     console.log('Calendar sync successful:', eventId, eventLink);
@@ -327,8 +321,8 @@ const EmpowermentDashboard = ({ onOpenScanner }) => {
 
       {/* Journal Modal Overlay */}
       {showJournalModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200 overflow-y-auto">
-          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in overflow-y-auto">
+          <div className="glass-card p-6 max-w-lg w-full shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold">Journal Entry</h3>
