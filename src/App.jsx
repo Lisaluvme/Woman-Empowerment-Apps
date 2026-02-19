@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from './firebase-config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, supabase } from './firebase-config';
 import MainApp from './components/MainApp';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -20,26 +19,36 @@ function App() {
     }
   }, []);
 
-  // Initialize user profile in Firebase Firestore on first login
+  // Initialize user profile in Supabase on first login
   useEffect(() => {
     const initializeUserProfile = async () => {
       if (user && !loading) {
         try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (!userDoc.exists()) {
-            // Create default profile
-            await setDoc(userDocRef, {
-              email: user.email,
-              displayName: user.email?.split('@')[0] || 'User',
-              emergencyContact: '',
-              notifications: true,
-              darkMode: false,
-              createdAt: new Date(),
-              stats: { points: 0 }
-            });
-            console.log('User profile created in Firebase Firestore');
+          // Check if user exists in Supabase
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('firebase_uid', user.uid)
+            .single();
+
+          if (!existingUser) {
+            // Create default profile in Supabase
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert([{
+                firebase_uid: user.uid,
+                email: user.email,
+                display_name: user.email?.split('@')[0] || 'User',
+                emergency_contact: { name: '', phone: '' },
+                preferences: { theme: 'light', notifications: true },
+                stats: { total_points: 0, level: 1, badges: [] }
+              }]);
+
+            if (!insertError) {
+              console.log('User profile created in Supabase');
+            } else {
+              console.error('Failed to create user profile:', insertError);
+            }
           }
         } catch (err) {
           console.error('Failed to initialize user profile:', err);

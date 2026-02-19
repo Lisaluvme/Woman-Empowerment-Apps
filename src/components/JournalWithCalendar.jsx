@@ -5,8 +5,7 @@
 
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Plus, Check, AlertCircle, Clock } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase-config';
+import { supabase } from '../firebase-config';
 
 const JournalWithCalendar = ({ user, onJournalCreated }) => {
   const [title, setTitle] = useState('');
@@ -47,7 +46,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
   };
 
   /**
-   * Submit journal entry to Firebase
+   * Submit journal entry to Supabase
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,20 +73,27 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
     try {
       const entryDateTime = getEntryDateTime();
 
-      // Create journal entry in Firebase
+      // Create journal entry in Supabase
       const journalData = {
-        userId: user.uid,
+        firebase_uid: user.uid,
         title: title.trim(),
         content: content.trim(),
-        entryDate: entryDate,
-        entryTime: entryTime || '00:00',
-        entryDateTime: entryDateTime.toISOString(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        syncedToCalendar: false
+        type: 'personal',
+        mood: null,
+        entry_date: entryDate,
+        entry_time: entryTime || '00:00',
+        entry_datetime: entryDateTime.toISOString(),
+        media_urls: [],
+        tags: []
       };
 
-      const docRef = await addDoc(collection(db, 'journals'), journalData);
+      const { data, error } = await supabase
+        .from('journals')
+        .insert([journalData])
+        .select()
+        .single();
+
+      if (error) throw error;
 
       setMessage({
         type: 'success',
@@ -104,7 +110,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
       // Notify parent component
       if (onJournalCreated) {
         onJournalCreated({
-          id: docRef.id,
+          id: data.id,
           ...journalData,
           createdAt: entryDateTime // Use selected date/time for calendar sync
         });
