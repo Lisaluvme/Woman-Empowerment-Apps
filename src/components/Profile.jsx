@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '../firebase-config';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { auth, supabase } from '../firebase-config';
 import { 
   User, 
   Shield, 
@@ -39,45 +38,90 @@ const Profile = ({ onLogout }) => {
 
     const loadUserData = async () => {
       try {
-        // Load user profile
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserProfile(data);
-          setDisplayName(data.displayName || '');
-          setEmergencyContact(data.emergencyContact || '');
-          setNotifications(data.notifications ?? true);
-          setDarkMode(data.darkMode ?? false);
+        // Load user profile from Supabase
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('firebase_uid', user.uid)
+          .single();
+
+        if (userData) {
+          setUserProfile({
+            ...userData,
+            displayName: userData.display_name || '',
+            emergencyContact: userData.emergency_contact?.phone || '',
+            notifications: userData.preferences?.notifications ?? true,
+            darkMode: userData.preferences?.theme === 'dark',
+            stats: userData.stats || { points: 0 },
+            createdAt: userData.created_at
+          });
+          setDisplayName(userData.display_name || '');
+          setEmergencyContact(userData.emergency_contact?.phone || '');
+          setNotifications(userData.preferences?.notifications ?? true);
+          setDarkMode(userData.preferences?.theme === 'dark');
         } else {
-          // Create default profile
+          // Create default profile in Supabase
           const defaultProfile = {
+            firebase_uid: user.uid,
             email: user.email,
-            displayName: user.email?.split('@')[0] || 'User',
-            emergencyContact: '',
-            notifications: true,
-            darkMode: false,
-            createdAt: new Date(),
-            stats: { points: 0 }
+            display_name: user.email?.split('@')[0] || 'User',
+            emergency_contact: { name: '', phone: '' },
+            preferences: { theme: 'light', notifications: true },
+            stats: { total_points: 0, level: 1, badges: [] }
           };
-          await updateDoc(userDocRef, defaultProfile);
-          setUserProfile(defaultProfile);
-          setDisplayName(defaultProfile.displayName);
-          setEmergencyContact(defaultProfile.emergencyContact);
+          
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([defaultProfile]);
+          
+          if (!insertError) {
+            setUserProfile({
+              ...defaultProfile,
+              displayName: defaultProfile.display_name,
+              emergencyContact: '',
+              notifications: true,
+              darkMode: false,
+              stats: { points: 0 },
+              createdAt: new Date()
+            });
+            setDisplayName(defaultProfile.display_name);
+          }
         }
 
-        // Count documents
-        const docsQuery = query(
-          collection(db, 'documents'),
-          where('userId', '==', user.uid)
-        );
-        
-        const unsubscribe = onSnapshot(docsQuery, (snapshot) => {
-          setDocumentCount(snapshot.size);
-        });
+        // Count documents from Supabase
+        const { count, error: countError } = await supabase
+          .from('vault_documents')
+          .select('*', { count: 'exact', head: true })
+          .eq('firebase_uid', user.uid);
 
-        return () => unsubscribe();
+        if (!countError) {
+          setDocumentCount(count || 0);
+        }
+
+        // Set up real-time subscription for document count
+        const channel = supabase
+          .channel('document_count_changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'vault_documents',
+              filter: `firebase_uid=eq.${user.uid}`
+            },
+            async () => {
+              const { count: newCount } = await supabase
+                .from('vault_documents')
+                .select('*', { count: 'exact', head: true })
+                .eq('firebase_uid', user.uid);
+              setDocumentCount(newCount || 0);
+            }
+          )
+          .subscribe();
+
+        return () => {
+          supabase.removeChannel(channel);
+        };
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -98,13 +142,22 @@ const Profile = ({ onLogout }) => {
     if (!user) return;
 
     try {
-      const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        displayName: displayName,
-        emergencyContact: emergencyContact,
-        notifications: notifications,
-        darkMode: darkMode
-      });
+      const { error } = await supabase
+        .from('users')
+        .update({
+          display_name: displayName,
+          emergency_contact: { 
+            name: '', 
+            phone: emergencyContact 
+          },
+          preferences: {
+            theme: darkMode ? 'dark' : 'light',
+            notifications: notifications
+          }
+        })
+        .eq('firebase_uid', user.uid);
+
+      if (error) throw error;
       
       setUserProfile({
         ...userProfile,
@@ -124,7 +177,7 @@ const Profile = ({ onLogout }) => {
 
   const calculateDaysActive = () => {
     if (!userProfile?.createdAt) return 0;
-    const created = new Date(userProfile.createdAt.seconds * 1000);
+    const created = new Date(userProfile.createdAt);
     const now = new Date();
     const diff = Math.floor((now - created) / (1000 * 60 * 60 * 24));
     return diff > 0 ? diff : 1;
@@ -281,7 +334,7 @@ const Profile = ({ onLogout }) => {
     {/* Stats Section */}
     <div className="grid grid-cols-3 gap-3 mb-6">
       <div className="card text-center">
-        <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.points || 0}</div>
+        <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.total_points || 0}</div>
         <div className="text-xs text-slate-500 mt-1">Points</div>
       </div>
       <div className="card text-center">

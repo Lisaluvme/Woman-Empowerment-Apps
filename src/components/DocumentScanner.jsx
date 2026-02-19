@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, supabase } from '../firebase-config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, supabase } from '../firebase-config';
 import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2 } from 'lucide-react';
 
 const DocumentScanner = ({ onSave, onCancel }) => {
@@ -70,7 +69,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
     }
   };
 
-  // 5. Save document (Supabase Storage + Firebase Firestore)
+  // 5. Save document (Supabase Storage + Supabase Database)
   const handleSave = async () => {
     if (!user) {
       setError('You must be logged in to save documents');
@@ -95,7 +94,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       const fileName = `${timestamp}.jpg`;
       const filePath = `documents/${user.uid}/${fileName}`;
       
-      // Upload to Supabase Storage (FREE!)
+      // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, blob, {
@@ -112,19 +111,28 @@ const DocumentScanner = ({ onSave, onCancel }) => {
         .from('documents')
         .getPublicUrl(filePath);
 
-      // Save document metadata to Firebase Firestore
-      const docData = {
-        userId: user.uid,
-        title: docTitle,
-        category: docCategory,
-        fileUrl: publicUrl,
-        filePath: filePath,
-        fileType: 'image/jpeg',
-        createdAt: serverTimestamp()
-      };
+      // Save document metadata to Supabase Database
+      const { data: docData, error: dbError } = await supabase
+        .from('vault_documents')
+        .insert([{
+          firebase_uid: user.uid,
+          title: docTitle,
+          category: docCategory,
+          file_url: publicUrl,
+          file_type: 'image/jpeg',
+          file_size: blob.size
+        }])
+        .select()
+        .single();
 
-      const docRef = await addDoc(collection(db, 'documents'), docData);
-      const savedDoc = { id: docRef.id, ...docData };
+      if (dbError) {
+        throw dbError;
+      }
+
+      const savedDoc = {
+        id: docData.id,
+        ...docData
+      };
 
       console.log('Document saved successfully:', savedDoc);
       onSave(savedDoc);

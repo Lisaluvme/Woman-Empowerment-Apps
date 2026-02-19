@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, supabase } from '../firebase-config';
-import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { auth, supabase } from '../firebase-config';
 import { Search, Filter, Plus, Grid, List, Trash2, Edit2, X, FolderOpen, Loader2, Download } from 'lucide-react';
 
 const VaultGallery = ({ onOpenScanner }) => {
@@ -13,7 +12,7 @@ const VaultGallery = ({ onOpenScanner }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load documents from Firebase
+  // Load documents from Supabase
   useEffect(() => {
     if (!user) {
       setDocuments([]);
@@ -23,30 +22,56 @@ const VaultGallery = ({ onOpenScanner }) => {
 
     setLoading(true);
 
-    let q = query(
-      collection(db, 'documents'),
-      where('userId', '==', user.uid)
-    );
+    const fetchDocuments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vault_documents')
+          .select('*')
+          .eq('firebase_uid', user.uid)
+          .order('created_at', { ascending: false });
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      // Sort by createdAt client-side (newest first)
-      docs.sort((a, b) => {
-        const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-        const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-        return bTime - aTime;
-      });
-      setDocuments(docs);
-      setLoading(false);
-    }, (error) => {
-      console.error('Error loading documents:', error);
-      setLoading(false);
-    });
+        if (error) {
+          console.error('Error loading documents:', error);
+          setDocuments([]);
+        } else {
+          setDocuments(data || []);
+        }
+      } catch (err) {
+        console.error('Error loading documents:', err);
+        setDocuments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => unsubscribe();
+    fetchDocuments();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('vault_documents_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vault_documents',
+          filter: `firebase_uid=eq.${user.uid}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setDocuments(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            setDocuments(prev => prev.filter(doc => doc.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            setDocuments(prev => prev.map(doc => doc.id === payload.new.id ? payload.new : doc));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const handleDeleteDocument = async (document) => {
@@ -55,22 +80,33 @@ const VaultGallery = ({ onOpenScanner }) => {
     }
 
     try {
-      // Delete from Supabase Storage (FREE!)
-      if (document.filePath) {
-        const { error: storageError } = await supabase.storage
-          .from('documents')
-          .remove([document.filePath]);
+      // Delete from Supabase Storage
+      if (document.file_url) {
+        // Extract file path from URL
+        const urlParts = document.file_url.split('/storage/v1/object/public/documents/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          const { error: storageError } = await supabase.storage
+            .from('documents')
+            .remove([filePath]);
 
-        if (storageError) {
-          console.error('Error deleting from storage:', storageError);
-          // Continue anyway to delete from database
+          if (storageError) {
+            console.error('Error deleting from storage:', storageError);
+          }
         }
       }
 
-      // Delete from Firestore
-      await deleteDoc(doc(db, 'documents', document.id));
+      // Delete from Supabase database
+      const { error: dbError } = await supabase
+        .from('vault_documents')
+        .delete()
+        .eq('id', document.id);
+
+      if (dbError) {
+        throw dbError;
+      }
       
-      // Document will be automatically removed from state by the onSnapshot listener
+      // Document will be automatically removed from state by the real-time subscription
       setSelectedDoc(null);
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -80,7 +116,7 @@ const VaultGallery = ({ onOpenScanner }) => {
 
   const handleDownloadDocument = async (doc) => {
     try {
-      const response = await fetch(doc.fileUrl);
+      const response = await fetch(doc.file_url);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -210,7 +246,7 @@ const VaultGallery = ({ onOpenScanner }) => {
             >
               <div className={`${viewMode === 'grid' ? 'w-full' : 'w-16 h-16'} bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden ${viewMode === 'grid' ? 'aspect-square mb-3' : ''} shadow-inner relative`}>
                 <img 
-                  src={doc.fileUrl} 
+                  src={doc.file_url} 
                   alt={doc.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -223,12 +259,12 @@ const VaultGallery = ({ onOpenScanner }) => {
               {viewMode === 'grid' ? (
                 <div>
                   <h3 className="font-bold text-sm truncate mb-1">{doc.title}</h3>
-                  <p className="text-xs text-gray-500 font-medium">{formatDate(doc.createdAt)}</p>
+                  <p className="text-xs text-gray-500 font-medium">{formatDate(doc.created_at)}</p>
                 </div>
               ) : (
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-base truncate mb-1">{doc.title}</h3>
-                  <p className="text-xs text-gray-500 font-medium">{formatDate(doc.createdAt)}</p>
+                  <p className="text-xs text-gray-500 font-medium">{formatDate(doc.created_at)}</p>
                 </div>
               )}
 
@@ -260,7 +296,7 @@ const VaultGallery = ({ onOpenScanner }) => {
       )}
 
       {/* Empty State */}
-      {filteredDocs.length === 0 && (
+      {filteredDocs.length === 0 && !loading && (
         <div className="text-center py-16 animate-fade-in-up">
           <div className="w-24 h-24 glass-card-lavender rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <FolderOpen size={48} className="text-violet-600" />
@@ -295,13 +331,13 @@ const VaultGallery = ({ onOpenScanner }) => {
 
             <div className="aspect-video bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden mb-6 shadow-inner relative group">
               <img 
-                src={selectedDoc.fileUrl} 
+                src={selectedDoc.file_url} 
                 alt={selectedDoc.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                 <button 
-                  onClick={() => window.open(selectedDoc.fileUrl, '_blank')}
+                  onClick={() => window.open(selectedDoc.file_url, '_blank')}
                   className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-gray-900 px-4 py-2 rounded-xl font-bold text-sm"
                 >
                   Open Full Size
@@ -316,7 +352,7 @@ const VaultGallery = ({ onOpenScanner }) => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500 font-medium">Date added</span>
-                <span className="font-bold">{formatDate(selectedDoc.createdAt)}</span>
+                <span className="font-bold">{formatDate(selectedDoc.created_at)}</span>
               </div>
             </div>
 
