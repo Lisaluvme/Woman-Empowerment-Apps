@@ -1,7 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import { createClient } from '@supabase/supabase-js';
 
 // Firebase configuration from environment variables
@@ -22,18 +20,14 @@ if (!firebaseConfig.apiKey || !firebaseConfig.apiKey.startsWith('AIza')) {
   console.error('Please check your .env file and ensure VITE_FIREBASE_API_KEY is set correctly.');
 }
 
-// Initialize Firebase with error handling
+// Initialize Firebase with error handling - ONLY AUTH, no Firestore
 let app;
 let auth;
-let db;
-let storage;
 
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-  console.log('✅ Firebase initialized successfully');
+  console.log('✅ Firebase Auth initialized successfully');
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
   console.error('Error code:', error.code);
@@ -41,10 +35,11 @@ try {
   throw error;
 }
 
-// Initialize Supabase for storage only (single instance)
+// Initialize Supabase for all data storage (database + files)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-export { app, auth, db, storage };
+// Export only what's needed - auth for authentication, supabase for everything else
+export { app, auth };
 export default app;
