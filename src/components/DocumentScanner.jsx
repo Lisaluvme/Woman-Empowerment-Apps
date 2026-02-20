@@ -93,7 +93,9 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(7);
       const fileName = `${timestamp}_${randomStr}.jpg`;
-      const filePath = `documents/${user.uid}/${fileName}`;
+      // Note: Don't include 'documents/' prefix - the bucket name is already 'documents'
+      // getPublicUrl will add the bucket name automatically
+      const filePath = `${user.uid}/${fileName}`;
       
       console.log('📤 Uploading document to Supabase Storage...');
       console.log('File path:', filePath);
