@@ -89,10 +89,15 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       const response = await fetch(capturedImage);
       const blob = await response.blob();
       
-      // Create file with timestamp
+      // Create file with timestamp and random string for uniqueness
       const timestamp = Date.now();
-      const fileName = `${timestamp}.jpg`;
+      const randomStr = Math.random().toString(36).substring(7);
+      const fileName = `${timestamp}_${randomStr}.jpg`;
       const filePath = `documents/${user.uid}/${fileName}`;
+      
+      console.log('📤 Uploading document to Supabase Storage...');
+      console.log('File path:', filePath);
+      console.log('User UID:', user.uid);
       
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -103,42 +108,65 @@ const DocumentScanner = ({ onSave, onCancel }) => {
         });
 
       if (uploadError) {
-        throw uploadError;
+        console.error('❌ Storage upload error:', uploadError);
+        throw new Error(`Storage error: ${uploadError.message}`);
       }
+
+      console.log('✅ Storage upload successful:', uploadData);
 
       // Get public URL from Supabase
       const { data: { publicUrl } } = supabase.storage
         .from('documents')
         .getPublicUrl(filePath);
 
+      console.log('📁 Public URL:', publicUrl);
+
       // Save document metadata to Supabase Database
+      const documentData = {
+        firebase_uid: user.uid,
+        title: docTitle.trim(),
+        category: docCategory,
+        file_url: publicUrl,
+        file_type: 'image/jpeg',
+        file_size: blob.size
+      };
+      
+      console.log('📝 Saving document metadata to database...');
+      console.log('Document data:', documentData);
+
       const { data: docData, error: dbError } = await supabase
         .from('vault_documents')
-        .insert([{
-          firebase_uid: user.uid,
-          title: docTitle,
-          category: docCategory,
-          file_url: publicUrl,
-          file_type: 'image/jpeg',
-          file_size: blob.size
-        }])
+        .insert([documentData])
         .select()
         .single();
 
       if (dbError) {
-        throw dbError;
+        console.error('❌ Database insert error:', dbError);
+        
+        // Try to clean up the uploaded file if database insert fails
+        await supabase.storage
+          .from('documents')
+          .remove([filePath]);
+        
+        throw new Error(`Database error: ${dbError.message}`);
       }
+
+      console.log('✅ Document metadata saved:', docData);
 
       const savedDoc = {
         id: docData.id,
         ...docData
       };
 
-      console.log('Document saved successfully:', savedDoc);
-      onSave(savedDoc);
+      console.log('🎉 Document saved successfully!', savedDoc);
+      
+      // Call onSave callback with the saved document
+      if (onSave) {
+        onSave(savedDoc);
+      }
 
     } catch (err) {
-      console.error('Error saving document:', err);
+      console.error('❌ Error saving document:', err);
       setError(err.message || 'Failed to save document. Please try again.');
     } finally {
       setIsSaving(false);

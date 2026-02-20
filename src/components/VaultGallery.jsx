@@ -24,6 +24,8 @@ const VaultGallery = ({ onOpenScanner }) => {
 
     const fetchDocuments = async () => {
       try {
+        console.log('📂 Fetching documents for user:', user.uid);
+        
         const { data, error } = await supabase
           .from('vault_documents')
           .select('*')
@@ -31,13 +33,14 @@ const VaultGallery = ({ onOpenScanner }) => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error loading documents:', error);
+          console.error('❌ Error loading documents:', error);
           setDocuments([]);
         } else {
+          console.log(`✅ Loaded ${data?.length || 0} documents:`, data);
           setDocuments(data || []);
         }
       } catch (err) {
-        console.error('Error loading documents:', err);
+        console.error('❌ Exception loading documents:', err);
         setDocuments([]);
       } finally {
         setLoading(false);
@@ -58,18 +61,31 @@ const VaultGallery = ({ onOpenScanner }) => {
           filter: `firebase_uid=eq.${user.uid}`
         },
         (payload) => {
+          console.log('📡 Real-time update received:', payload.eventType, payload);
+          
           if (payload.eventType === 'INSERT') {
-            setDocuments(prev => [payload.new, ...prev]);
+            console.log('➕ New document added:', payload.new);
+            // Check if document already exists to avoid duplicates
+            setDocuments(prev => {
+              const exists = prev.some(doc => doc.id === payload.new.id);
+              if (exists) return prev;
+              return [payload.new, ...prev];
+            });
           } else if (payload.eventType === 'DELETE') {
+            console.log('➖ Document deleted:', payload.old);
             setDocuments(prev => prev.filter(doc => doc.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
+            console.log('📝 Document updated:', payload.new);
             setDocuments(prev => prev.map(doc => doc.id === payload.new.id ? payload.new : doc));
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status);
+      });
 
     return () => {
+      console.log('🔌 Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, [user]);

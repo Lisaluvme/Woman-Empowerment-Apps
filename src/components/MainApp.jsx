@@ -118,8 +118,9 @@ const MainApp = () => {
       {showScanner && (
         <DocumentScanner
           onSave={(doc) => {
-            console.log("Document saved successfully:", doc);
+            console.log("🎉 Document saved successfully in MainApp:", doc);
             setShowScanner(false);
+            // Switch to vault tab to show the saved document
             setActiveTab('vault');
           }}
           onCancel={() => setShowScanner(false)}
