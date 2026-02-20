@@ -4,7 +4,7 @@ import { auth, supabase } from '../firebase-config';
 import { Search, Filter, Plus, Grid, List, Trash2, Edit2, X, FolderOpen, Loader2, Download } from 'lucide-react';
 
 const VaultGallery = ({ onOpenScanner }) => {
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -14,6 +14,11 @@ const VaultGallery = ({ onOpenScanner }) => {
 
   // Load documents from Supabase
   useEffect(() => {
+    // Wait for auth to finish loading before deciding what to do
+    if (authLoading) {
+      return; // Still loading auth, don't do anything yet
+    }
+
     if (!user) {
       setDocuments([]);
       setLoading(false);
@@ -88,7 +93,10 @@ const VaultGallery = ({ onOpenScanner }) => {
       console.log('🔌 Cleaning up subscription');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, authLoading]);
+
+  // Combined loading state - show loading if auth is loading OR documents are loading
+  const isLoading = authLoading || loading;
 
   const handleDeleteDocument = async (document) => {
     if (!confirm(`Are you sure you want to delete "${document.title}"?`)) {
@@ -221,7 +229,7 @@ const VaultGallery = ({ onOpenScanner }) => {
       </div>
 
       {/* Loading State */}
-      {loading && (
+      {isLoading && (
         <div className="flex items-center justify-center py-16">
           <Loader2 size={48} className="animate-spin text-violet-600" />
         </div>
@@ -246,7 +254,7 @@ const VaultGallery = ({ onOpenScanner }) => {
       </div>
 
       {/* Documents Grid/List */}
-      {!loading && (
+      {!isLoading && (
         <div className={viewMode === 'grid' 
           ? 'grid grid-cols-2 gap-4' 
           : 'space-y-4'
@@ -312,7 +320,7 @@ const VaultGallery = ({ onOpenScanner }) => {
       )}
 
       {/* Empty State */}
-      {filteredDocs.length === 0 && !loading && (
+      {filteredDocs.length === 0 && !isLoading && (
         <div className="text-center py-16 animate-fade-in-up">
           <div className="w-24 h-24 glass-card-lavender rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <FolderOpen size={48} className="text-violet-600" />
