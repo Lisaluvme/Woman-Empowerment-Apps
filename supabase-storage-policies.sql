@@ -27,3 +27,19 @@ USING (bucket_id = 'documents');
 CREATE POLICY "Allow public updates" 
 ON storage.objects FOR UPDATE 
 USING (bucket_id = 'documents');
+
+-- ============================================
+-- FIX EXISTING DOCUMENT URLs WITH DOUBLED PATH
+-- Run this ONCE to fix existing records with incorrect URLs
+-- ============================================
+
+-- Update file_url to remove doubled "documents" path
+-- Example: documents/documents/userId/file.jpg -> documents/userId/file.jpg
+UPDATE vault_documents
+SET file_url = REPLACE(file_url, '/documents/documents/', '/documents/')
+WHERE file_url LIKE '%/documents/documents/%';
+
+-- Verify the fix (run this to check)
+SELECT id, title, file_url 
+FROM vault_documents 
+ORDER BY created_at DESC;
