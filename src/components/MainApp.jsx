@@ -6,6 +6,7 @@ import EmpowermentDashboard from './EmpowermentDashboard';
 import VaultGallery from './VaultGallery';
 import DocumentScanner from './DocumentScanner';
 import Profile from './Profile';
+import SafetyScreen from './SafetyScreen';
 import GoogleCalendarIntegration from './GoogleCalendarIntegration';
 import { Home, Shield, FolderOpen, User, Plus, Bell } from 'lucide-react';
 
@@ -62,7 +63,7 @@ const MainApp = () => {
       case 'vault':
         return <VaultGallery onOpenScanner={() => setShowScanner(true)} />;
       case 'safety':
-        return <EmpowermentDashboard onOpenScanner={() => setShowScanner(true)} onJournalCreated={handleJournalCreated} />;
+        return <SafetyScreen />;
       case 'profile':
         return <Profile onLogout={handleLogout} />;
       case 'calendar':
