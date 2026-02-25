@@ -3,6 +3,53 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, supabase } from '../firebase-config';
 import { Search, Filter, Plus, Grid, List, Trash2, Edit2, X, FolderOpen, Loader2, Download } from 'lucide-react';
 
+// Helper function to get correct file URL
+// Handles both old incorrect URLs (documents/documents/...) and new correct URLs
+const getCorrectFileUrl = (fileUrl, supabaseInstance) => {
+  if (!fileUrl) return null;
+  
+  // If URL already works or is not a supabase URL, return as-is
+  if (!fileUrl.includes('supabase.co')) return fileUrl;
+  
+  // Extract the file path from the URL
+  // URL format: https://xxx.supabase.co/storage/v1/object/public/documents/userId/filename.jpg
+  // or incorrect: https://xxx.supabase.co/storage/v1/object/public/documents/documents/userId/filename.jpg
+  
+  try {
+    const url = new URL(fileUrl);
+    const pathParts = url.pathname.split('/');
+    // pathParts: ['', 'storage', 'v1', 'object', 'public', 'documents', ...]
+    
+    // Find the bucket name index
+    const bucketIndex = pathParts.findIndex((part, i) => 
+      i > 4 && (part === 'documents' || part === 'vault_documents')
+    );
+    
+    if (bucketIndex === -1) return fileUrl;
+    
+    // Get everything after the bucket name
+    let filePathParts = pathParts.slice(bucketIndex + 1);
+    
+    // Check for doubled "documents" folder in path
+    if (filePathParts[0] === 'documents') {
+      // Remove the extra "documents" prefix
+      filePathParts = filePathParts.slice(1);
+    }
+    
+    const correctPath = filePathParts.join('/');
+    
+    // Reconstruct the URL
+    const { data: { publicUrl } } = supabaseInstance.storage
+      .from('documents')
+      .getPublicUrl(correctPath);
+    
+    return publicUrl;
+  } catch (e) {
+    console.error('Error parsing file URL:', e);
+    return fileUrl;
+  }
+};
+
 const VaultGallery = ({ onOpenScanner }) => {
   const [user, authLoading] = useAuthState(auth);
   const [viewMode, setViewMode] = useState('grid');
@@ -98,6 +145,37 @@ const VaultGallery = ({ onOpenScanner }) => {
   // Combined loading state - show loading if auth is loading OR documents are loading
   const isLoading = authLoading || loading;
 
+  // Helper to extract correct file path for storage operations
+  const extractFilePath = (fileUrl) => {
+    if (!fileUrl || !fileUrl.includes('supabase.co')) return null;
+    
+    try {
+      const url = new URL(fileUrl);
+      const pathParts = url.pathname.split('/');
+      
+      // Find the bucket name index
+      const bucketIndex = pathParts.findIndex((part, i) => 
+        i > 4 && (part === 'documents' || part === 'vault_documents')
+      );
+      
+      if (bucketIndex === -1) return null;
+      
+      // Get everything after the bucket name
+      let filePathParts = pathParts.slice(bucketIndex + 1);
+      
+      // Check for doubled "documents" folder in path
+      if (filePathParts[0] === 'documents') {
+        // Remove the extra "documents" prefix
+        filePathParts = filePathParts.slice(1);
+      }
+      
+      return filePathParts.join('/');
+    } catch (e) {
+      console.error('Error extracting file path:', e);
+      return null;
+    }
+  };
+
   const handleDeleteDocument = async (document) => {
     if (!confirm(`Are you sure you want to delete "${document.title}"?`)) {
       return;
@@ -106,16 +184,18 @@ const VaultGallery = ({ onOpenScanner }) => {
     try {
       // Delete from Supabase Storage
       if (document.file_url) {
-        // Extract file path from URL
-        const urlParts = document.file_url.split('/storage/v1/object/public/documents/');
-        if (urlParts.length > 1) {
-          const filePath = urlParts[1];
+        // Extract correct file path (handles both old and new URL formats)
+        const filePath = extractFilePath(document.file_url);
+        if (filePath) {
+          console.log('🗑️ Deleting file from storage:', filePath);
           const { error: storageError } = await supabase.storage
             .from('documents')
             .remove([filePath]);
 
           if (storageError) {
             console.error('Error deleting from storage:', storageError);
+          } else {
+            console.log('✅ File deleted from storage');
           }
         }
       }
@@ -130,6 +210,7 @@ const VaultGallery = ({ onOpenScanner }) => {
         throw dbError;
       }
       
+      console.log('✅ Document metadata deleted from database');
       // Document will be automatically removed from state by the real-time subscription
       setSelectedDoc(null);
     } catch (error) {
@@ -140,7 +221,14 @@ const VaultGallery = ({ onOpenScanner }) => {
 
   const handleDownloadDocument = async (doc) => {
     try {
-      const response = await fetch(doc.file_url);
+      // Use corrected URL for download
+      const correctUrl = getCorrectFileUrl(doc.file_url, supabase);
+      console.log('📥 Downloading from:', correctUrl);
+      
+      const response = await fetch(correctUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download: ${response.status}`);
+      }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -270,10 +358,14 @@ const VaultGallery = ({ onOpenScanner }) => {
             >
               <div className={`${viewMode === 'grid' ? 'w-full' : 'w-16 h-16'} bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden ${viewMode === 'grid' ? 'aspect-square mb-3' : ''} shadow-inner relative`}>
                 <img 
-                  src={doc.file_url} 
+                  src={getCorrectFileUrl(doc.file_url, supabase)} 
                   alt={doc.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={(e) => {
+                    console.error('Failed to load image:', doc.file_url);
+                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23f3f4f6" width="100" height="100"/><text x="50%" y="50%" text-anchor="middle" fill="%239ca3af" font-size="12">No Image</text></svg>';
+                  }}
                 />
                 <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
                   {getCategoryIcon(doc.category)}
@@ -355,13 +447,17 @@ const VaultGallery = ({ onOpenScanner }) => {
 
             <div className="aspect-video bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden mb-6 shadow-inner relative group">
               <img 
-                src={selectedDoc.file_url} 
+                src={getCorrectFileUrl(selectedDoc.file_url, supabase)} 
                 alt={selectedDoc.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('Failed to load modal image:', selectedDoc.file_url);
+                  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect fill="%23f3f4f6" width="400" height="300"/><text x="50%" y="50%" text-anchor="middle" fill="%239ca3af" font-size="16">Image Not Available</text></svg>';
+                }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                 <button 
-                  onClick={() => window.open(selectedDoc.file_url, '_blank')}
+                  onClick={() => window.open(getCorrectFileUrl(selectedDoc.file_url, supabase), '_blank')}
                   className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-gray-900 px-4 py-2 rounded-xl font-bold text-sm"
                 >
                   Open Full Size
