@@ -323,22 +323,42 @@ const VaultGallery = ({ onOpenScanner }) => {
         </div>
       )}
 
-      {/* Filter Pills */}
-      <div className="flex gap-3 overflow-x-auto pb-3 mb-6 scrollbar-hide animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
-              selectedCategory === cat.id
-                ? 'glass-card-lavender shadow-lg scale-105'
-                : 'glass-card hover:shadow-md'
-            }`}
-          >
-            <span className="text-base">{cat.icon}</span>
-            <span>{cat.label}</span>
-          </button>
-        ))}
+      {/* Filter Pills - Improved Layout */}
+      <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+        {/* First Row */}
+        <div className="flex gap-2 mb-2">
+          {categories.slice(0, 4).map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex-1 flex flex-col items-center gap-1.5 px-3 py-3 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                selectedCategory === cat.id
+                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg scale-[1.02]'
+                  : 'glass-card hover:shadow-md text-gray-700'
+              }`}
+            >
+              <span className="text-lg">{cat.icon}</span>
+              <span className="truncate">{cat.label}</span>
+            </button>
+          ))}
+        </div>
+        {/* Second Row */}
+        <div className="flex gap-2">
+          {categories.slice(4).map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex-1 flex flex-col items-center gap-1.5 px-3 py-3 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                selectedCategory === cat.id
+                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg scale-[1.02]'
+                  : 'glass-card hover:shadow-md text-gray-700'
+              }`}
+            >
+              <span className="text-lg">{cat.icon}</span>
+              <span className="truncate">{cat.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Documents Grid/List */}
