@@ -323,39 +323,39 @@ const VaultGallery = ({ onOpenScanner }) => {
         </div>
       )}
 
-      {/* Filter Pills - Improved Layout */}
+      {/* Filter Pills - Improved Layout with more spacing */}
       <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-        {/* First Row */}
-        <div className="flex gap-2 mb-2">
+        {/* First Row - 4 items */}
+        <div className="grid grid-cols-4 gap-3 mb-3">
           {categories.slice(0, 4).map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex-1 flex flex-col items-center gap-1.5 px-3 py-3 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl text-xs font-semibold transition-all duration-200 min-h-[80px] ${
                 selectedCategory === cat.id
-                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg scale-[1.02]'
-                  : 'glass-card hover:shadow-md text-gray-700'
+                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg'
+                  : 'bg-white/60 backdrop-blur-sm border border-gray-100 hover:bg-white/80 hover:shadow-md text-gray-700'
               }`}
             >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="truncate">{cat.label}</span>
+              <span className="text-2xl">{cat.icon}</span>
+              <span className="truncate text-center leading-tight">{cat.label}</span>
             </button>
           ))}
         </div>
-        {/* Second Row */}
-        <div className="flex gap-2">
+        {/* Second Row - 3 items centered */}
+        <div className="grid grid-cols-3 gap-3 max-w-[75%] mx-auto">
           {categories.slice(4).map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex-1 flex flex-col items-center gap-1.5 px-3 py-3 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl text-xs font-semibold transition-all duration-200 min-h-[80px] ${
                 selectedCategory === cat.id
-                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg scale-[1.02]'
-                  : 'glass-card hover:shadow-md text-gray-700'
+                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg'
+                  : 'bg-white/60 backdrop-blur-sm border border-gray-100 hover:bg-white/80 hover:shadow-md text-gray-700'
               }`}
             >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="truncate">{cat.label}</span>
+              <span className="text-2xl">{cat.icon}</span>
+              <span className="truncate text-center leading-tight">{cat.label}</span>
             </button>
           ))}
         </div>
