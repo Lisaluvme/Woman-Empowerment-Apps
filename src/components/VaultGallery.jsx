@@ -323,39 +323,21 @@ const VaultGallery = ({ onOpenScanner }) => {
         </div>
       )}
 
-      {/* Filter Pills - Improved Layout with more spacing */}
+      {/* Filter Pills - 2 items per row for better text fit */}
       <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-        {/* First Row - 4 items */}
-        <div className="grid grid-cols-4 gap-3 mb-3">
-          {categories.slice(0, 4).map((cat) => (
+        <div className="grid grid-cols-2 gap-3">
+          {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl text-xs font-semibold transition-all duration-200 min-h-[80px] ${
+              className={`flex items-center gap-3 px-4 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 ${
                 selectedCategory === cat.id
                   ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg'
                   : 'bg-white/60 backdrop-blur-sm border border-gray-100 hover:bg-white/80 hover:shadow-md text-gray-700'
               }`}
             >
               <span className="text-2xl">{cat.icon}</span>
-              <span className="truncate text-center leading-tight">{cat.label}</span>
-            </button>
-          ))}
-        </div>
-        {/* Second Row - 3 items centered */}
-        <div className="grid grid-cols-3 gap-3 max-w-[75%] mx-auto">
-          {categories.slice(4).map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl text-xs font-semibold transition-all duration-200 min-h-[80px] ${
-                selectedCategory === cat.id
-                  ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg'
-                  : 'bg-white/60 backdrop-blur-sm border border-gray-100 hover:bg-white/80 hover:shadow-md text-gray-700'
-              }`}
-            >
-              <span className="text-2xl">{cat.icon}</span>
-              <span className="truncate text-center leading-tight">{cat.label}</span>
+              <span className="text-left">{cat.label}</span>
             </button>
           ))}
         </div>
