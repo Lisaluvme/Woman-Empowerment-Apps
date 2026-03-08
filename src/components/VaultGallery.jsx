@@ -1,32 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, supabase } from '../firebase-config';
-import { Search, Plus, Grid, List, Trash2, X, FolderOpen, Loader2, Download, FileText } from 'lucide-react';
+import { Search, Plus, Grid, List, Trash2, X, FolderOpen, Loader2, Download, FileText, Image as ImageIcon } from 'lucide-react';
+import { deleteFile, getDownloadUrl, initializeDriveServices, getFileMetadata } from '../services/googleDriveService';
+import { isImage, isDriveUrl, convertDriveUrl, getFileIcon, getFileExtension } from '../utils/fileTypeUtils';
 
 // Helper function to get correct file URL
-const getCorrectFileUrl = (fileUrl, supabaseInstance) => {
+const getCorrectFileUrl = (fileUrl, supabaseInstance, mimeType) => {
   if (!fileUrl) return null;
+
+  // Handle Google Drive URLs
+  if (isDriveUrl(fileUrl)) {
+    // For images, convert to viewable URL
+    // For other files, keep original URL as they'll be downloaded
+    if (isImage(mimeType)) {
+      return convertDriveUrl(fileUrl);
+    }
+    return fileUrl;
+  }
+
+  // Handle Supabase URLs
   if (!fileUrl.includes('supabase.co')) return fileUrl;
-  
+
   try {
     const url = new URL(fileUrl);
     const pathParts = url.pathname.split('/');
-    const bucketIndex = pathParts.findIndex((part, i) => 
+    const bucketIndex = pathParts.findIndex((part, i) =>
       i > 4 && (part === 'documents' || part === 'vault_documents')
     );
-    
+
     if (bucketIndex === -1) return fileUrl;
-    
+
     let filePathParts = pathParts.slice(bucketIndex + 1);
     if (filePathParts[0] === 'documents') {
       filePathParts = filePathParts.slice(1);
     }
-    
+
     const correctPath = filePathParts.join('/');
     const { data: { publicUrl } } = supabaseInstance.storage
       .from('documents')
       .getPublicUrl(correctPath);
-    
+
     return publicUrl;
   } catch (e) {
     console.error('Error parsing file URL:', e);
@@ -146,20 +160,31 @@ const VaultGallery = ({ onOpenScanner }) => {
     }
 
     try {
-      if (document.file_url) {
+      // Delete from Google Drive if it's a Drive file
+      if (document.storage_backend === 'google_drive' && document.google_drive_file_id) {
+        console.log('🗑️ Deleting from Google Drive:', document.google_drive_file_id);
+        try {
+          await deleteFile(document.google_drive_file_id);
+        } catch (driveError) {
+          console.error('Failed to delete from Drive:', driveError);
+          // Continue with database deletion even if Drive deletion fails
+        }
+      } else if (document.file_url) {
+        // Delete from Supabase Storage for legacy files
         const filePath = extractFilePath(document.file_url);
         if (filePath) {
           await supabase.storage.from('documents').remove([filePath]);
         }
       }
 
+      // Delete from database
       const { error: dbError } = await supabase
         .from('vault_documents')
         .delete()
         .eq('id', document.id);
 
       if (dbError) throw dbError;
-      
+
       setSelectedDoc(null);
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -169,14 +194,32 @@ const VaultGallery = ({ onOpenScanner }) => {
 
   const handleDownloadDocument = async (doc) => {
     try {
-      const correctUrl = getCorrectFileUrl(doc.file_url, supabase);
-      const response = await fetch(correctUrl);
+      let downloadUrl;
+      let fileName;
+
+      // Handle Google Drive files
+      if (doc.storage_backend === 'google_drive' && doc.google_drive_file_id) {
+        // Initialize Drive services to get download URL
+        await initializeDriveServices();
+        downloadUrl = await getDownloadUrl(doc.google_drive_file_id);
+        // Get file extension from MIME type
+        const extension = getFileExtension(doc.file_type || doc.google_drive_mimetype);
+        fileName = `${doc.title}.${extension}`;
+      } else {
+        // Handle Supabase files
+        downloadUrl = getCorrectFileUrl(doc.file_url, supabase, doc.file_type);
+        const extension = getFileExtension(doc.file_type);
+        fileName = `${doc.title}.${extension}`;
+      }
+
+      // Fetch and download the file
+      const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error(`Failed to download: ${response.status}`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${doc.title}.jpg`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -184,6 +227,25 @@ const VaultGallery = ({ onOpenScanner }) => {
     } catch (error) {
       console.error('Error downloading document:', error);
       alert('Failed to download document. Please try again.');
+    }
+  };
+
+  const handleViewInDrive = async (doc) => {
+    if (doc.storage_backend === 'google_drive' && doc.google_drive_file_id) {
+      try {
+        // Initialize Drive services
+        await initializeDriveServices();
+        
+        // Get the web view link
+        const fileMetadata = await getFileMetadata(doc.google_drive_file_id);
+        const viewUrl = fileMetadata.webViewLink || `https://drive.google.com/file/d/${doc.google_drive_file_id}/view`;
+        
+        // Open in new tab
+        window.open(viewUrl, '_blank');
+      } catch (error) {
+        console.error('Error getting Drive file URL:', error);
+        alert('Failed to open file in Google Drive. Please try downloading instead.');
+      }
     }
   };
 
@@ -304,15 +366,23 @@ const VaultGallery = ({ onOpenScanner }) => {
                   {viewMode === 'grid' ? (
                     <>
                       <div className="aspect-square bg-gray-100 relative">
-                        <img 
-                          src={getCorrectFileUrl(doc.file_url, supabase)} 
-                          alt={doc.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="%23f3f4f6" width="200" height="200"/><text x="50%" y="45%" text-anchor="middle" fill="%239ca3af" font-size="40">📄</text></svg>';
-                          }}
-                        />
+                        {isImage(doc.file_type) ? (
+                          <img
+                            src={getCorrectFileUrl(doc.file_url, supabase, doc.file_type)}
+                            alt={doc.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect fill="%23f3f4f6" width="200" height="200"/><text x="50%" y="45%" text-anchor="middle" fill="%239ca3af" font-size="40">📄</text></svg>';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <div className="text-center">
+                              <span className="text-5xl block">{getFileIcon(doc.file_type)}</span>
+                            </div>
+                          </div>
+                        )}
                         <div className={`absolute top-2 right-2 w-7 h-7 rounded-lg bg-gradient-to-r ${catInfo.color} flex items-center justify-center text-white text-xs shadow`}>
                           {catInfo.icon}
                         </div>
@@ -325,15 +395,21 @@ const VaultGallery = ({ onOpenScanner }) => {
                   ) : (
                     <>
                       <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                        <img 
-                          src={getCorrectFileUrl(doc.file_url, supabase)} 
-                          alt={doc.title}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56"><rect fill="%23f3f4f6" width="56" height="56"/><text x="50%" y="55%" text-anchor="middle" fill="%239ca3af" font-size="20">📄</text></svg>';
-                          }}
-                        />
+                        {isImage(doc.file_type) ? (
+                          <img
+                            src={getCorrectFileUrl(doc.file_url, supabase, doc.file_type)}
+                            alt={doc.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56"><rect fill="%23f3f4f6" width="56" height="56"/><text x="50%" y="55%" text-anchor="middle" fill="%239ca3af" font-size="20">📄</text></svg>';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-2xl">{getFileIcon(doc.file_type)}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-sm text-gray-900 truncate">{doc.title}</h3>
@@ -375,17 +451,24 @@ const VaultGallery = ({ onOpenScanner }) => {
         {selectedDoc && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedDoc(null)}>
             <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-              {/* Image */}
+              {/* Preview */}
               <div className="relative aspect-video bg-gray-100">
-                <img 
-                  src={getCorrectFileUrl(selectedDoc.file_url, supabase)} 
-                  alt={selectedDoc.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect fill="%23f3f4f6" width="400" height="300"/><text x="50%" y="50%" text-anchor="middle" fill="%239ca3af" font-size="48">📄</text></svg>';
-                  }}
-                />
-                <button 
+                {isImage(selectedDoc.file_type) ? (
+                  <img
+                    src={getCorrectFileUrl(selectedDoc.file_url, supabase, selectedDoc.file_type)}
+                    alt={selectedDoc.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect fill="%23f3f4f6" width="400" height="300"/><text x="50%" y="50%" text-anchor="middle" fill="%239ca3af" font-size="48">📄</text></svg>';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <span className="text-6xl mb-2">{getFileIcon(selectedDoc.file_type)}</span>
+                    <p className="text-sm font-medium text-gray-600">{selectedDoc.file_type || 'File'}</p>
+                  </div>
+                )}
+                <button
                   onClick={() => setSelectedDoc(null)}
                   className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg"
                 >
@@ -408,7 +491,7 @@ const VaultGallery = ({ onOpenScanner }) => {
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <button 
                     onClick={() => handleDownloadDocument(selectedDoc)}
                     className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-all"
@@ -416,6 +499,17 @@ const VaultGallery = ({ onOpenScanner }) => {
                     <Download size={18} />
                     <span>Download</span>
                   </button>
+                  
+                  {selectedDoc.storage_backend === 'google_drive' && (
+                    <button 
+                      onClick={() => handleViewInDrive(selectedDoc)}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-100 text-blue-700 font-semibold rounded-xl hover:bg-blue-200 transition-all"
+                    >
+                      <span className="text-sm">📁</span>
+                      <span>View in Drive</span>
+                    </button>
+                  )}
+                  
                   <button 
                     onClick={() => handleDeleteDocument(selectedDoc)}
                     className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-all"

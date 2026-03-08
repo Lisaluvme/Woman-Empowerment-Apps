@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, supabase } from '../firebase-config';
-import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2 } from 'lucide-react';
+import { Camera, RefreshCw, Check, Trash2, X, AlertCircle, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
+import { uploadBase64Image, uploadFile, deleteFile, initializeDriveServices, isDriveReady, loadDriveApi, setDriveAccessToken } from '../services/googleDriveService';
+import { getFileExtension, formatFileSize, isImage, isPdf, getFileIcon } from '../utils/fileTypeUtils';
+import { hasGoogleCalendarAccess, requestGoogleCalendarAccess, initializeGoogleServices, initializeGoogleIdentity } from '../services/googleCalendarServiceOAuthOnly';
 
 const DocumentScanner = ({ onSave, onCancel }) => {
   const [user] = useAuthState(auth);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -61,15 +65,27 @@ const DocumentScanner = ({ onSave, onCancel }) => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCapturedImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
+      setUploadedFile(file);
+      // For images, read as data URL for preview
+      if (isImage(file.type)) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setCapturedImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // For non-images, set to null and use file icon
+        setCapturedImage(null);
+      }
+      // Set default title from filename
+      if (!docTitle) {
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+        setDocTitle(nameWithoutExt);
+      }
     }
   };
 
-  // 5. Save document (Supabase Storage + Supabase Database)
+  // 5. Save document (Google Drive + Supabase Database)
   const handleSave = async () => {
     if (!user) {
       setError('You must be logged in to save documents');
@@ -85,54 +101,92 @@ const DocumentScanner = ({ onSave, onCancel }) => {
     setError('');
 
     try {
-      // Convert base64 to blob
-      const response = await fetch(capturedImage);
-      const blob = await response.blob();
-      
-      // Create file with timestamp and random string for uniqueness
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(7);
-      const fileName = `${timestamp}_${randomStr}.jpg`;
-      // Note: Don't include 'documents/' prefix - the bucket name is already 'documents'
-      // getPublicUrl will add the bucket name automatically
-      const filePath = `${user.uid}/${fileName}`;
-      
-      console.log('📤 Uploading document to Supabase Storage...');
-      console.log('File path:', filePath);
-      console.log('User UID:', user.uid);
-      
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, blob, {
-          contentType: 'image/jpeg',
-          upsert: false
-        });
+      // Initialize Google services (both gapi and GIS)
+      await initializeGoogleServices();
+      await initializeDriveServices();
 
-      if (uploadError) {
-        console.error('❌ Storage upload error:', uploadError);
-        throw new Error(`Storage error: ${uploadError.message}`);
+      // Check if we have Google Drive access
+      if (!isDriveReady()) {
+        // Request access if not ready
+        console.log('🔐 Requesting Google Drive access...');
+        setError('Connecting to Google Drive...');
+        
+        await requestGoogleCalendarAccess();
+
+        // After getting access token, set it for Drive and load Drive API
+        // The token is stored in localStorage by the OAuth callback
+        const storedToken = localStorage.getItem('google_calendar_token');
+        if (storedToken) {
+          setDriveAccessToken(storedToken);
+          console.log('✅ Drive access token set');
+        }
+
+        // Load Drive API after token is set
+        await loadDriveApi();
+        console.log('✅ Drive API loaded');
+        setError(''); // Clear the connection message
       }
 
-      console.log('✅ Storage upload successful:', uploadData);
+      let driveResult;
+      let fileType;
+      let fileSize;
 
-      // Get public URL from Supabase
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
+      // Handle camera capture (image) or file upload
+      if (capturedImage && !uploadedFile) {
+        // Camera capture - upload base64 image
+        console.log('📤 Uploading camera capture to Google Drive...');
+        setError('Uploading image to Google Drive...');
+        
+        driveResult = await uploadBase64Image(capturedImage, {
+          title: `${docTitle.trim()}.jpg`,
+          category: docCategory
+        });
+        fileType = 'image/jpeg';
 
-      console.log('📁 Public URL:', publicUrl);
+        // Calculate file size from base64
+        const base64Length = capturedImage.split(',')[1]?.length || 0;
+        fileSize = Math.round(base64Length * 0.75);
+      } else if (uploadedFile) {
+        // File upload - use the file directly
+        console.log('📤 Uploading file to Google Drive...');
+        console.log('File name:', uploadedFile.name);
+        console.log('File type:', uploadedFile.type);
+        console.log('File size:', formatFileSize(uploadedFile.size));
+        
+        setError(`Uploading ${uploadedFile.name} to Google Drive...`);
+
+        // Get file extension
+        const extension = getFileExtension(uploadedFile.type);
+        const fileName = `${docTitle.trim()}.${extension}`;
+
+        driveResult = await uploadFile(uploadedFile, {
+          title: fileName,
+          category: docCategory
+        });
+        fileType = uploadedFile.type || 'application/octet-stream';
+        fileSize = uploadedFile.size;
+      } else {
+        throw new Error('No file to save. Please capture or upload a file.');
+      }
+
+      console.log('✅ File uploaded to Drive:', driveResult);
+      setError('Saving document to your vault...');
 
       // Save document metadata to Supabase Database
       const documentData = {
         firebase_uid: user.uid,
         title: docTitle.trim(),
         category: docCategory,
-        file_url: publicUrl,
-        file_type: 'image/jpeg',
-        file_size: blob.size
+        file_url: driveResult.webViewLink,
+        file_type: fileType,
+        file_size: fileSize,
+        storage_backend: 'google_drive',
+        google_drive_file_id: driveResult.fileId,
+        google_drive_web_view_link: driveResult.webViewLink,
+        google_drive_mimetype: driveResult.mimeType,
+        google_drive_size: driveResult.size
       };
-      
+
       console.log('📝 Saving document metadata to database...');
       console.log('Document data:', documentData);
 
@@ -144,12 +198,14 @@ const DocumentScanner = ({ onSave, onCancel }) => {
 
       if (dbError) {
         console.error('❌ Database insert error:', dbError);
-        
-        // Try to clean up the uploaded file if database insert fails
-        await supabase.storage
-          .from('documents')
-          .remove([filePath]);
-        
+
+        // Try to clean up the uploaded Drive file if database insert fails
+        try {
+          await deleteFile(driveResult.fileId);
+        } catch (cleanupError) {
+          console.error('Failed to clean up Drive file:', cleanupError);
+        }
+
         throw new Error(`Database error: ${dbError.message}`);
       }
 
@@ -161,11 +217,14 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       };
 
       console.log('🎉 Document saved successfully!', savedDoc);
-      
+
       // Call onSave callback with the saved document
       if (onSave) {
         onSave(savedDoc);
       }
+
+      // Success message
+      setError('Document saved successfully to Google Drive and your vault!');
 
     } catch (err) {
       console.error('❌ Error saving document:', err);
@@ -202,12 +261,13 @@ const DocumentScanner = ({ onSave, onCancel }) => {
                 <div className="relative">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <button type="button" className="w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-bold hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 pointer-events-none">
-                    Upload Photo
+                    <FileText size={20} />
+                    Upload File
                   </button>
                 </div>
               </div>
@@ -238,11 +298,24 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       ) : (
         <div className="w-full max-w-sm flex flex-col gap-4 bg-white rounded-2xl p-6 shadow-2xl my-auto">
           <div className="relative">
-            <img src={capturedImage} alt="Preview" className="rounded-lg shadow-lg border-2 border-gray-200 w-full max-h-48 object-contain bg-gray-100" />
+            {capturedImage ? (
+              <img src={capturedImage} alt="Preview" className="rounded-lg shadow-lg border-2 border-gray-200 w-full max-h-48 object-contain bg-gray-100" />
+            ) : uploadedFile ? (
+              <div className="rounded-lg shadow-lg border-2 border-gray-200 w-full h-48 flex flex-col items-center justify-center bg-gray-100">
+                <span className="text-6xl mb-2">{getFileIcon(uploadedFile.type)}</span>
+                <p className="text-sm font-medium text-gray-700">{uploadedFile.name}</p>
+                <p className="text-xs text-gray-500">{formatFileSize(uploadedFile.size)}</p>
+              </div>
+            ) : (
+              <div className="rounded-lg shadow-lg border-2 border-gray-200 w-full h-48 flex items-center justify-center bg-gray-100">
+                <ImageIcon size={48} className="text-gray-400" />
+              </div>
+            )}
             <button
               type="button"
               onClick={() => {
                 setCapturedImage(null);
+                setUploadedFile(null);
                 setError('');
                 setDocTitle('');
                 setDocCategory('personal');
@@ -303,7 +376,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || !docTitle.trim()}
+              disabled={isSaving || !docTitle.trim() || (!capturedImage && !uploadedFile)}
               className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-3 px-4 rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
               {isSaving ? (

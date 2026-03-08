@@ -5,7 +5,7 @@
  */
 
 const GOOGLE_CLIENT_ID = '947408696329-0eprnf9okvvd85fi2fof5juitcg9sh82.apps.googleusercontent.com';
-const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file';
 const CALENDAR_API_URL = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
 let tokenClient = null;
