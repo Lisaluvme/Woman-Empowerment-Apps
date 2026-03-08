@@ -166,47 +166,70 @@ const DocumentScanner = ({ onSave, onCancel }) => {
         throw new Error('No file to save. Please capture or upload a file.');
       }
 
-      // === STEP 2: Also upload to Google Drive (backup) ===
+      // === STEP 2: Also upload to Google Drive (backup, with timeout) ===
       console.log('📤 Step 2: Uploading to Google Drive...');
       setError('Also backing up to Google Drive...');
 
+      // Create a timeout promise
+      const DRIVE_TIMEOUT = 15000; // 15 seconds max for Drive
+      const driveTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Drive upload timeout')), DRIVE_TIMEOUT)
+      );
+
       try {
-        // Initialize Google services
-        await initializeGoogleServices();
-        await initializeDriveServices();
+        // Race between actual upload and timeout
+        driveResult = await Promise.race([
+          (async () => {
+            // Initialize Google services
+            await initializeGoogleServices();
+            await initializeDriveServices();
 
-        // Check if we have Google Drive access
-        if (!isDriveReady()) {
-          console.log('🔐 Requesting Google Drive access...');
-          await requestGoogleCalendarAccess();
+            // Check if we have Google Drive access
+            if (!isDriveReady()) {
+              console.log('🔐 Requesting Google Drive access...');
 
-          const storedToken = localStorage.getItem('google_calendar_token');
-          if (storedToken) {
-            setDriveAccessToken(storedToken);
-            console.log('✅ Drive access token set');
-          }
+              // Add timeout to OAuth request too
+              const oauthTimeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('OAuth timeout')), 10000)
+              );
 
-          await loadDriveApi();
-          console.log('✅ Drive API loaded');
-        }
+              await Promise.race([
+                requestGoogleCalendarAccess(),
+                oauthTimeoutPromise
+              ]).catch(() => {
+                throw new Error('OAuth request took too long');
+              });
 
-        // Upload to Google Drive
-        if (capturedImage && !uploadedFile) {
-          driveResult = await uploadBase64Image(capturedImage, {
-            title: fileName,
-            category: docCategory
-          });
-        } else if (uploadedFile) {
-          driveResult = await uploadFile(uploadedFile, {
-            title: fileName,
-            category: docCategory
-          });
-        }
+              const storedToken = localStorage.getItem('google_calendar_token');
+              if (storedToken) {
+                setDriveAccessToken(storedToken);
+                console.log('✅ Drive access token set');
+              }
+
+              await loadDriveApi();
+              console.log('✅ Drive API loaded');
+            }
+
+            // Upload to Google Drive
+            if (capturedImage && !uploadedFile) {
+              return await uploadBase64Image(capturedImage, {
+                title: fileName,
+                category: docCategory
+              });
+            } else if (uploadedFile) {
+              return await uploadFile(uploadedFile, {
+                title: fileName,
+                category: docCategory
+              });
+            }
+          })(),
+          driveTimeoutPromise
+        ]);
 
         console.log('✅ File uploaded to Drive:', driveResult);
       } catch (driveError) {
-        console.warn('⚠️ Google Drive upload failed (continuing with Supabase):', driveError.message);
-        // Continue even if Drive fails - we still have Supabase backup
+        console.warn('⚠️ Google Drive upload skipped:', driveError.message);
+        driveResult = null; // Ensure driveResult is null on failure
       }
 
       // === STEP 3: Save metadata to database ===
@@ -254,12 +277,13 @@ const DocumentScanner = ({ onSave, onCancel }) => {
         onSave(savedDoc);
       }
 
-      // Success message
+      // Success message - clear error after 2 seconds
       if (driveResult) {
-        setError('Document saved to App AND Google Drive!');
+        setError('✅ Saved to App + Google Drive!');
       } else {
-        setError('Document saved to App! (Google Drive backup unavailable)');
+        setError('✅ Saved to App! (Drive backup skipped)');
       }
+      setTimeout(() => setError(''), 2000);
 
     } catch (err) {
       console.error('❌ Error saving document:', err);
