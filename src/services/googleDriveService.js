@@ -107,6 +107,59 @@ const makeDriveRequest = async (request) => {
 };
 
 /**
+ * Find or create the "Womens App" folder in Google Drive
+ * @returns {string} - The folder ID
+ */
+export const getOrCreateAppFolder = async () => {
+  if (!isDriveReady()) {
+    throw new Error('Google Drive not ready. Please connect first.');
+  }
+
+  const folderName = 'Womens App';
+
+  try {
+    // First, try to find existing folder
+    console.log('🔍 Looking for "Womens App" folder...');
+
+    const searchResponse = await makeDriveRequest(async () => {
+      return await gapi.client.drive.files.list({
+        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id, name)',
+        spaces: 'drive'
+      });
+    });
+
+    const existingFolder = searchResponse.result.files?.find(f => f.name === folderName);
+
+    if (existingFolder) {
+      console.log('✅ Found existing "Womens App" folder:', existingFolder.id);
+      return existingFolder.id;
+    }
+
+    // Folder doesn't exist, create it
+    console.log('📁 Creating "Womens App" folder...');
+
+    const createResponse = await makeDriveRequest(async () => {
+      return await gapi.client.drive.files.create({
+        resource: {
+          name: folderName,
+          mimeType: 'application/vnd.google-apps.folder'
+        },
+        fields: 'id'
+      });
+    });
+
+    const folderId = createResponse.result.id;
+    console.log('✅ Created "Womens App" folder:', folderId);
+    return folderId;
+
+  } catch (error) {
+    console.error('❌ Error getting/creating folder:', error);
+    throw error;
+  }
+};
+
+/**
  * Upload a file to Google Drive
  * @param {File|Blob} file - The file to upload
  * @param {Object} metadata - File metadata (title, category, etc.)
@@ -120,6 +173,9 @@ export const uploadFile = async (file, metadata = {}) => {
   try {
     console.log('📤 Uploading file to Google Drive:', metadata.title);
 
+    // Get or create the "Womens App" folder
+    const folderId = await getOrCreateAppFolder();
+
     // Create file metadata
     const fileMetadata = {
       name: metadata.title || file.name || `Document_${Date.now()}`,
@@ -128,7 +184,7 @@ export const uploadFile = async (file, metadata = {}) => {
         uploadedAt: new Date().toISOString(),
         source: 'DocumentScanner'
       }),
-      parents: ['root'] // Upload to root folder
+      parents: [folderId] // Upload to Womens App folder
     };
 
     // Use multipart upload for files with content
