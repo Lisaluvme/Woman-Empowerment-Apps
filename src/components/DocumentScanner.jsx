@@ -85,7 +85,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
     }
   };
 
-  // 5. Save document (Google Drive + Supabase Database)
+  // 5. Save document (BOTH Supabase Storage + Google Drive + Supabase Database)
   const handleSave = async () => {
     if (!user) {
       setError('You must be logged in to save documents');
@@ -101,93 +101,132 @@ const DocumentScanner = ({ onSave, onCancel }) => {
     setError('');
 
     try {
-      // Initialize Google services (both gapi and GIS)
-      await initializeGoogleServices();
-      await initializeDriveServices();
-
-      // Check if we have Google Drive access
-      if (!isDriveReady()) {
-        // Request access if not ready
-        console.log('🔐 Requesting Google Drive access...');
-        setError('Connecting to Google Drive...');
-        
-        await requestGoogleCalendarAccess();
-
-        // After getting access token, set it for Drive and load Drive API
-        // The token is stored in localStorage by the OAuth callback
-        const storedToken = localStorage.getItem('google_calendar_token');
-        if (storedToken) {
-          setDriveAccessToken(storedToken);
-          console.log('✅ Drive access token set');
-        }
-
-        // Load Drive API after token is set
-        await loadDriveApi();
-        console.log('✅ Drive API loaded');
-        setError(''); // Clear the connection message
-      }
-
-      let driveResult;
       let fileType;
       let fileSize;
+      let supabaseUrl = null;
+      let driveResult = null;
+      let fileName;
 
-      // Handle camera capture (image) or file upload
+      // === STEP 1: Upload to Supabase Storage (for app functionality) ===
+      console.log('📤 Step 1: Uploading to Supabase Storage...');
+      setError('Uploading to Supabase Storage...');
+
+      // Prepare file data
       if (capturedImage && !uploadedFile) {
-        // Camera capture - upload base64 image
-        console.log('📤 Uploading camera capture to Google Drive...');
-        setError('Uploading image to Google Drive...');
-        
-        driveResult = await uploadBase64Image(capturedImage, {
-          title: `${docTitle.trim()}.jpg`,
-          category: docCategory
-        });
+        // Camera capture - convert to blob
+        const response = await fetch(capturedImage);
+        const blob = await response.blob();
+        fileName = `${docTitle.trim()}.jpg`;
         fileType = 'image/jpeg';
+        fileSize = blob.size;
 
-        // Calculate file size from base64
-        const base64Length = capturedImage.split(',')[1]?.length || 0;
-        fileSize = Math.round(base64Length * 0.75);
+        // Upload to Supabase Storage
+        const filePath = `${user.uid}/${Date.now()}_${fileName}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, blob);
+
+        if (uploadError) {
+          console.error('❌ Supabase Storage error:', uploadError);
+          throw new Error(`Storage upload failed: ${uploadError.message}`);
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+        supabaseUrl = publicUrl;
+        console.log('✅ Supabase Storage upload successful:', publicUrl);
+
       } else if (uploadedFile) {
-        // File upload - use the file directly
-        console.log('📤 Uploading file to Google Drive...');
-        console.log('File name:', uploadedFile.name);
-        console.log('File type:', uploadedFile.type);
-        console.log('File size:', formatFileSize(uploadedFile.size));
-        
-        setError(`Uploading ${uploadedFile.name} to Google Drive...`);
-
-        // Get file extension
+        // File upload
         const extension = getFileExtension(uploadedFile.type);
-        const fileName = `${docTitle.trim()}.${extension}`;
-
-        driveResult = await uploadFile(uploadedFile, {
-          title: fileName,
-          category: docCategory
-        });
+        fileName = `${docTitle.trim()}.${extension}`;
         fileType = uploadedFile.type || 'application/octet-stream';
         fileSize = uploadedFile.size;
+
+        // Upload to Supabase Storage
+        const filePath = `${user.uid}/${Date.now()}_${fileName}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, uploadedFile);
+
+        if (uploadError) {
+          console.error('❌ Supabase Storage error:', uploadError);
+          throw new Error(`Storage upload failed: ${uploadError.message}`);
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+        supabaseUrl = publicUrl;
+        console.log('✅ Supabase Storage upload successful:', publicUrl);
       } else {
         throw new Error('No file to save. Please capture or upload a file.');
       }
 
-      console.log('✅ File uploaded to Drive:', driveResult);
+      // === STEP 2: Also upload to Google Drive (backup) ===
+      console.log('📤 Step 2: Uploading to Google Drive...');
+      setError('Also backing up to Google Drive...');
+
+      try {
+        // Initialize Google services
+        await initializeGoogleServices();
+        await initializeDriveServices();
+
+        // Check if we have Google Drive access
+        if (!isDriveReady()) {
+          console.log('🔐 Requesting Google Drive access...');
+          await requestGoogleCalendarAccess();
+
+          const storedToken = localStorage.getItem('google_calendar_token');
+          if (storedToken) {
+            setDriveAccessToken(storedToken);
+            console.log('✅ Drive access token set');
+          }
+
+          await loadDriveApi();
+          console.log('✅ Drive API loaded');
+        }
+
+        // Upload to Google Drive
+        if (capturedImage && !uploadedFile) {
+          driveResult = await uploadBase64Image(capturedImage, {
+            title: fileName,
+            category: docCategory
+          });
+        } else if (uploadedFile) {
+          driveResult = await uploadFile(uploadedFile, {
+            title: fileName,
+            category: docCategory
+          });
+        }
+
+        console.log('✅ File uploaded to Drive:', driveResult);
+      } catch (driveError) {
+        console.warn('⚠️ Google Drive upload failed (continuing with Supabase):', driveError.message);
+        // Continue even if Drive fails - we still have Supabase backup
+      }
+
+      // === STEP 3: Save metadata to database ===
+      console.log('📝 Step 3: Saving document metadata to database...');
       setError('Saving document to your vault...');
 
-      // Save document metadata to Supabase Database
       const documentData = {
         firebase_uid: user.uid,
         title: docTitle.trim(),
         category: docCategory,
-        file_url: driveResult.webViewLink,
+        file_url: supabaseUrl, // Primary URL from Supabase
         file_type: fileType,
         file_size: fileSize,
-        storage_backend: 'google_drive',
-        google_drive_file_id: driveResult.fileId,
-        google_drive_web_view_link: driveResult.webViewLink,
-        google_drive_mimetype: driveResult.mimeType,
-        google_drive_size: driveResult.size
+        storage_backend: driveResult ? 'both' : 'supabase_storage',
+        google_drive_file_id: driveResult?.fileId || null,
+        google_drive_web_view_link: driveResult?.webViewLink || null,
+        google_drive_mimetype: driveResult?.mimeType || null,
+        google_drive_size: driveResult?.size || null
       };
 
-      console.log('📝 Saving document metadata to database...');
       console.log('Document data:', documentData);
 
       const { data: docData, error: dbError } = await supabase
@@ -198,14 +237,6 @@ const DocumentScanner = ({ onSave, onCancel }) => {
 
       if (dbError) {
         console.error('❌ Database insert error:', dbError);
-
-        // Try to clean up the uploaded Drive file if database insert fails
-        try {
-          await deleteFile(driveResult.fileId);
-        } catch (cleanupError) {
-          console.error('Failed to clean up Drive file:', cleanupError);
-        }
-
         throw new Error(`Database error: ${dbError.message}`);
       }
 
@@ -224,7 +255,11 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       }
 
       // Success message
-      setError('Document saved successfully to Google Drive and your vault!');
+      if (driveResult) {
+        setError('Document saved to App AND Google Drive!');
+      } else {
+        setError('Document saved to App! (Google Drive backup unavailable)');
+      }
 
     } catch (err) {
       console.error('❌ Error saving document:', err);
