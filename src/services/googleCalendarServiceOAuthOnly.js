@@ -4,7 +4,7 @@
  * Use this if you're getting 403 errors with the API key
  */
 
-const GOOGLE_CLIENT_ID = '947408696329-0eprnf9okvvd85fi2fof5juitcg9sh82.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '947408696329-q16v2l7ci2j8r804516pmbit208j8rm6.apps.googleusercontent.com';
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file';
 const CALENDAR_API_URL = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 
