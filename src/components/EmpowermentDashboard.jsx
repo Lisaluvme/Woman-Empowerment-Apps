@@ -14,6 +14,7 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
   const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showSOSAlert, setShowSOSAlert] = useState(false);
+  const [emergencyContact, setEmergencyContact] = useState('');
 
   // Career progress
   const careerGoal = { current: 7, target: 10 };
@@ -32,13 +33,42 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
     return () => clearInterval(interval);
   }, [isTimerActive, safetyTimer]);
 
+  // Fetch emergency contact from database
+  useEffect(() => {
+    const fetchEmergencyContact = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('emergency_contact')
+            .eq('firebase_uid', user.uid)
+            .single();
+
+          if (data && data.emergency_contact?.phone) {
+            setEmergencyContact(data.emergency_contact.phone);
+          }
+        } catch (error) {
+          console.error('Error fetching emergency contact:', error);
+        }
+      }
+    };
+
+    fetchEmergencyContact();
+  }, [user]);
+
   // SOS Trigger
   const triggerSOS = () => {
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
       const message = encodeURIComponent(`EMERGENCY: I need help. My location: ${mapLink}`);
-      window.open(`https://wa.me/60103899295?text=${message}`, '_blank');
+
+      // Use user's emergency contact if available, otherwise use fallback
+      const contactNumber = emergencyContact || '60103899295';
+
+      // Remove any non-digit characters for the WhatsApp link
+      const cleanNumber = contactNumber.replace(/\D/g, '');
+      window.open(`https://wa.me/${cleanNumber}?text=${message}`, '_blank');
     });
   };
 

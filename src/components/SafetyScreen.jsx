@@ -8,11 +8,7 @@ const SafetyScreen = () => {
   const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showSOSAlert, setShowSOSAlert] = useState(false);
-  const [emergencyContacts, setEmergencyContacts] = useState([
-    { name: 'Emergency Services', number: '911', icon: '🚨' },
-    { name: 'Trusted Contact 1', number: '+60 12-345 6789', icon: '👤' },
-    { name: 'Trusted Contact 2', number: '+60 98-765 4321', icon: '👤' },
-  ]);
+  const [emergencyContact, setEmergencyContact] = useState('');
 
   // Timer countdown
   useEffect(() => {
@@ -27,13 +23,42 @@ const SafetyScreen = () => {
     return () => clearInterval(interval);
   }, [isTimerActive, safetyTimer]);
 
+  // Fetch emergency contact from database
+  useEffect(() => {
+    const fetchEmergencyContact = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('emergency_contact')
+            .eq('firebase_uid', user.uid)
+            .single();
+
+          if (data && data.emergency_contact?.phone) {
+            setEmergencyContact(data.emergency_contact.phone);
+          }
+        } catch (error) {
+          console.error('Error fetching emergency contact:', error);
+        }
+      }
+    };
+
+    fetchEmergencyContact();
+  }, [user]);
+
   // SOS Trigger
   const triggerSOS = () => {
     navigator.geolocation.getCurrentPosition((pos) => {
       const { latitude, longitude } = pos.coords;
       const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
       const message = encodeURIComponent(`EMERGENCY: I need help. My location: ${mapLink}`);
-      window.open(`https://wa.me/60103899295?text=${message}`, '_blank');
+
+      // Use user's emergency contact if available, otherwise use fallback
+      const contactNumber = emergencyContact || '60103899295';
+
+      // Remove any non-digit characters for the WhatsApp link
+      const cleanNumber = contactNumber.replace(/\D/g, '');
+      window.open(`https://wa.me/${cleanNumber}?text=${message}`, '_blank');
     });
   };
 
@@ -143,25 +168,53 @@ const SafetyScreen = () => {
               </div>
               <h3 className="font-semibold text-gray-900">Emergency Contacts</h3>
             </div>
-            <button className="text-sm text-violet-600 font-semibold">Edit</button>
+            <button
+              onClick={() => window.location.href = '/profile'}
+              className="text-sm text-violet-600 font-semibold"
+            >
+              Edit
+            </button>
           </div>
 
           <div className="space-y-3">
-            {emergencyContacts.map((contact, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                <span className="text-2xl">{contact.icon}</span>
+            {emergencyContact ? (
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <span className="text-2xl">👤</span>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900 text-sm">{contact.name}</p>
-                  <p className="text-xs text-gray-500">{contact.number}</p>
+                  <p className="font-medium text-gray-900 text-sm">Your Emergency Contact</p>
+                  <p className="text-xs text-gray-500">{emergencyContact}</p>
                 </div>
                 <a
-                  href={`tel:${contact.number}`}
+                  href={`tel:${emergencyContact}`}
                   className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center"
                 >
                   <Phone className="w-5 h-5 text-emerald-600" />
                 </a>
               </div>
-            ))}
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500 mb-2">No emergency contact set</p>
+                <button
+                  onClick={() => window.location.href = '/profile'}
+                  className="text-sm text-violet-600 font-semibold"
+                >
+                  Add Emergency Contact
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+              <span className="text-2xl">🚨</span>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 text-sm">Emergency Services</p>
+                <p className="text-xs text-gray-500">999 (Malaysia)</p>
+              </div>
+              <a
+                href="tel:999"
+                className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center"
+              >
+                <Phone className="w-5 h-5 text-emerald-600" />
+              </a>
+            </div>
           </div>
         </div>
 
