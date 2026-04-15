@@ -5,16 +5,23 @@ import { Search, Plus, Grid, List, Trash2, X, FolderOpen, Loader2, Download, Fil
 import { deleteFile, getDownloadUrl, initializeDriveServices, getFileMetadata } from '../services/googleDriveService';
 import { isImage, isDriveUrl, convertDriveUrl, getFileIcon, getFileExtension } from '../utils/fileTypeUtils';
 
+// Placeholder for Google Drive images that can't be directly accessed
+const getPlaceholderForDriveImage = (mimeType) => {
+  const icon = getFileIcon(mimeType);
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#14b8a6;stop-opacity:0.1"/><stop offset="100%" style="stop-color:#0d9488;stop-opacity:0.2"/></linearGradient></defs><rect fill="url(#grad)" width="200" height="200"/><text x="50%" y="40%" text-anchor="middle" dominant-baseline="middle" fill="#14b8a6" font-size="50">${icon}</text><text x="50%" y="60%" text-anchor="middle" dominant-baseline="middle" fill="#6b7280" font-size="14" font-family="Arial">Google Drive</text><text x="50%" y="75%" text-anchor="middle" dominant-baseline="middle" fill="#9ca3af" font-size="12" font-family="Arial">Click to view</text></svg>`)}`;
+};
+
 // Helper function to get correct file URL
 const getCorrectFileUrl = (fileUrl, supabaseInstance, mimeType) => {
   if (!fileUrl) return null;
 
   // Handle Google Drive URLs
   if (isDriveUrl(fileUrl)) {
-    // For images, convert to viewable URL
-    // For other files, keep original URL as they'll be downloaded
+    // For images, use a placeholder since Google Drive URLs can fail with 403
+    // The actual image will need to be accessed via the Google Drive API
     if (isImage(mimeType)) {
-      return convertDriveUrl(fileUrl);
+      // Return a placeholder - Google Drive images need OAuth access
+      return getPlaceholderForDriveImage(mimeType);
     }
     return fileUrl;
   }

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create PWA Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            padding: 12px 24px;
+            background: #14b8a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0d9488;
+        }
+        .icon-preview {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .icon-item {
+            text-align: center;
+        }
+        .icon-item img {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create PWA Icons</h1>
+    <p>Click the button to generate all required PWA icons</p>
+    <button onclick="generateIcons()">Generate Icons</button>
+    <div id="output"></div>
+    <div id="previews" class="icon-preview"></div>
+
+    <script>
+        function generateIcons() {
+            const sizes = [48, 72, 96, 144, 192, 512];
+            const output = document.getElementById('output');
+            const previews = document.getElementById('previews');
+            output.innerHTML = '';
+            previews.innerHTML = '';
+
+            sizes.forEach(size => {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                // Background gradient
+                const gradient = ctx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#14b8a6');
+                gradient.addColorStop(1, '#0d9488');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, size, size);
+
+                // Add shield icon
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                const centerX = size / 2;
+                const centerY = size / 2;
+                const scale = size / 512;
+
+                // Simple shield shape
+                ctx.beginPath();
+                ctx.moveTo(centerX - 80 * scale, centerY - 100 * scale);
+                ctx.lineTo(centerX + 80 * scale, centerY - 100 * scale);
+                ctx.lineTo(centerX + 80 * scale, centerY - 60 * scale);
+                ctx.bezierCurveTo(
+                    centerX + 80 * scale, centerY + 80 * scale,
+                    centerX + 60 * scale, centerY + 120 * scale,
+                    centerX, centerY + 140 * scale
+                );
+                ctx.bezierCurveTo(
+                    centerX - 60 * scale, centerY + 120 * scale,
+                    centerX - 80 * scale, centerY + 80 * scale,
+                    centerX - 80 * scale, centerY - 60 * scale
+                );
+                ctx.closePath();
+                ctx.fill();
+
+                // Convert to blob
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `icon-${size}.png`;
+                    a.textContent = `Download icon-${size}.png`;
+                    a.style.display = 'block';
+                    a.style.marginTop = '10px';
+
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.width = size / 2;
+                    img.height = size / 2;
+
+                    const div = document.createElement('div');
+                    div.className = 'icon-item';
+                    div.innerHTML = `<p>icon-${size}.png</p>`;
+                    div.appendChild(img);
+
+                    previews.appendChild(div);
+
+                    // Auto-download
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }, 'image/png');
+            });
+
+            output.innerHTML = '<p style="color: green; font-weight: bold;">Icons generated! Check your Downloads folder.</p>';
+        }
+    </script>
+</body>
+</html>
