@@ -33,7 +33,7 @@ const SafetyScreen = () => {
       const { latitude, longitude } = pos.coords;
       const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
       const message = encodeURIComponent(`EMERGENCY: I need help. My location: ${mapLink}`);
-      window.open(`https://wa.me/60123456789?text=${message}`, '_blank');
+      window.open(`https://wa.me/60103899295?text=${message}`, '_blank');
     });
   };
 

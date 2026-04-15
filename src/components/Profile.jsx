@@ -303,7 +303,7 @@ const Profile = ({ onLogout }) => {
               type="text"
               value={emergencyContact}
               onChange={(e) => setEmergencyContact(e.target.value)}
-              placeholder="e.g., 60123456789"
+              placeholder="e.g., 60103899295"
               className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
             />
           </div>
