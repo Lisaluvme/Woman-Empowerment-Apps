@@ -235,18 +235,18 @@ const VaultGallery = ({ onOpenScanner }) => {
         {/* Category Filters - Premium horizontal bar */}
         {!isLoading && (
           <div className="mb-6">
-            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-5 px-5">
+            <div className="flex items-center gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-5 px-5 snap-x snap-mandatory">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-2 h-11 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  className={`flex items-center gap-2 h-12 px-5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 snap-start flex-shrink-0 ${
                     selectedCategory === cat.id
                       ? `bg-gradient-to-r ${cat.color} text-white shadow-md`
                       : 'bg-white/80 border border-gray-200/80 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900'
                   }`}
                 >
-                  <span className="text-base">{cat.icon}</span>
+                  <span className="text-lg">{cat.icon}</span>
                   <span>{cat.label}</span>
                 </button>
               ))}
