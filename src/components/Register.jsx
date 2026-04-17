@@ -65,7 +65,6 @@ const Register = () => {
           emergencyContact: '',
           notifications: true,
           darkMode: false,
-          stats: { points: 0 },
           createdAt: new Date().toISOString()
         };
         localStorage.setItem(profileKey, JSON.stringify(profile));

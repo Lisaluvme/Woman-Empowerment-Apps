@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2, Sparkles, X } from 'lucide-react';
+import { Shield, Target, BookOpen, Camera, Plus, TrendingUp, Clock, Users, CheckCircle2, X } from 'lucide-react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase-config';
 import JournalWithCalendar from './JournalWithCalendar';
@@ -10,7 +10,6 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
   const [showJournalModal, setShowJournalModal] = useState(false);
   const [currentJournalEntry, setCurrentJournalEntry] = useState(null);
   // State
-  const [empowermentPoints, setEmpowermentPoints] = useState(1250);
   const [safetyTimer, setSafetyTimer] = useState(3600); // 1 hour in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showSOSAlert, setShowSOSAlert] = useState(false);
@@ -116,15 +115,6 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
           </h2>
           <p className="text-sm text-gray-500 font-medium">Here's your overview for today</p>
         </div>
-        <div className="text-right">
-          <div className="glass-badge animate-floating">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-600 animate-sparkle" />
-              <span className="text-lg font-bold text-violet-700">{empowermentPoints}</span>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 font-medium">Empowerment Points</p>
-        </div>
       </div>
 
       {/* HERO COMMAND CENTER CARD */}
@@ -140,16 +130,12 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6 stagger-children" style={{ '--stagger-delay': '1' }}>
+        <div className="grid grid-cols-2 gap-3 mb-6 stagger-children" style={{ '--stagger-delay': '1' }}>
           <div className="glass-card p-4 text-center hover-lift">
             <div className="text-2xl font-bold text-violet-600 mb-1">{careerGoal.current}</div>
             <div className="text-xs text-gray-600 font-medium">Skills</div>
           </div>
           <div className="glass-card p-4 text-center hover-lift" style={{ animationDelay: '0.1s' }}>
-            <div className="text-2xl font-bold text-amber-600 mb-1">{empowermentPoints}</div>
-            <div className="text-xs text-gray-600 font-medium">Points</div>
-          </div>
-          <div className="glass-card p-4 text-center hover-lift" style={{ animationDelay: '0.2s' }}>
             <div className="text-2xl font-bold text-emerald-600 mb-1">3</div>
             <div className="text-xs text-gray-600 font-medium">Tasks</div>
           </div>

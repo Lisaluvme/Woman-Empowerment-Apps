@@ -4,15 +4,8 @@ import { auth } from '../firebase-config';
 import {
   User,
   Shield,
-  Bell,
-  HelpCircle,
   ChevronRight,
   LogOut,
-  Settings,
-  Moon,
-  Globe,
-  Heart,
-  Sparkles,
   Edit2,
   Check,
   X
@@ -46,8 +39,6 @@ const Profile = ({ onLogout }) => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   // Load user profile and document count
   useEffect(() => {
@@ -65,17 +56,12 @@ const Profile = ({ onLogout }) => {
           setUserProfile(storedProfile);
           setDisplayName(storedProfile.displayName || '');
           setEmergencyContact(storedProfile.emergencyContact || '');
-          setNotifications(storedProfile.notifications ?? true);
-          setDarkMode(storedProfile.darkMode ?? false);
         } else {
           // Create default profile
           const defaultProfile = {
             displayName: user.email?.split('@')[0] || 'User',
             email: user.email,
             emergencyContact: '',
-            notifications: true,
-            darkMode: false,
-            stats: { points: 0 },
             createdAt: new Date().toISOString()
           };
 
@@ -83,8 +69,6 @@ const Profile = ({ onLogout }) => {
           setUserProfile(defaultProfile);
           setDisplayName(defaultProfile.displayName);
           setEmergencyContact('');
-          setNotifications(true);
-          setDarkMode(false);
         }
 
         // Count documents from Google Drive Storage
@@ -115,8 +99,6 @@ const Profile = ({ onLogout }) => {
         ...userProfile,
         displayName,
         emergencyContact,
-        notifications,
-        darkMode,
         updatedAt: new Date().toISOString()
       };
 
@@ -154,68 +136,6 @@ const Profile = ({ onLogout }) => {
           label: 'Security',
           description: 'Password and 2FA settings',
           color: 'sky'
-        },
-      ]
-    },
-    {
-      title: 'Preferences',
-      items: [
-        {
-          icon: Bell,
-          label: 'Notifications',
-          description: notifications ? 'Enabled' : 'Disabled',
-          toggle: true,
-          toggleValue: notifications,
-          action: () => {
-            const newValue = !notifications;
-            setNotifications(newValue);
-            if (userProfile) {
-              const updatedProfile = { ...userProfile, notifications: newValue };
-              saveProfileToStorage(user.uid, updatedProfile);
-              setUserProfile(updatedProfile);
-            }
-          },
-          color: 'champagne'
-        },
-        {
-          icon: Moon,
-          label: 'Dark Mode',
-          description: darkMode ? 'Enabled' : 'Disabled',
-          toggle: true,
-          toggleValue: darkMode,
-          action: () => {
-            const newValue = !darkMode;
-            setDarkMode(newValue);
-            if (userProfile) {
-              const updatedProfile = { ...userProfile, darkMode: newValue };
-              saveProfileToStorage(user.uid, updatedProfile);
-              setUserProfile(updatedProfile);
-            }
-          },
-          color: 'lavender'
-        },
-        {
-          icon: Globe,
-          label: 'Language',
-          description: 'English (US)',
-          color: 'sky'
-        },
-      ]
-    },
-    {
-      title: 'Support',
-      items: [
-        {
-          icon: HelpCircle,
-          label: 'Help Center',
-          description: 'Get help and support',
-          color: 'champagne'
-        },
-        {
-          icon: Settings,
-          label: 'App Settings',
-          description: 'Configure app preferences',
-          color: 'lavender'
         },
       ]
     }
@@ -304,11 +224,7 @@ const Profile = ({ onLogout }) => {
         )}
 
         {/* Stats Section */}
-        <div className="grid grid-cols-3 gap-3 mt-6">
-          <div className="card text-center">
-            <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.points || 0}</div>
-            <div className="text-xs text-slate-500 mt-1">Points</div>
-          </div>
+        <div className="grid grid-cols-2 gap-3 mt-6">
           <div className="card text-center">
             <div className="text-2xl font-bold text-blue-600">{documentCount}</div>
             <div className="text-xs text-slate-500 mt-1">Documents</div>
