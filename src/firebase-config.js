@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { createClient } from '@supabase/supabase-js';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -21,6 +20,7 @@ if (!firebaseConfig.apiKey || !firebaseConfig.apiKey.startsWith('AIza')) {
 }
 
 // Initialize Firebase with error handling - ONLY AUTH, no Firestore
+// All data storage now uses Google Drive
 let app;
 let auth;
 
@@ -28,6 +28,7 @@ try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   console.log('✅ Firebase Auth initialized successfully');
+  console.log('✅ Google Drive Storage enabled (no Supabase)');
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
   console.error('Error code:', error.code);
@@ -35,11 +36,6 @@ try {
   throw error;
 }
 
-// Initialize Supabase for all data storage (database + files)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Export only what's needed - auth for authentication, supabase for everything else
+// Export only what's needed - auth for authentication, Google Drive for storage
 export { app, auth };
 export default app;

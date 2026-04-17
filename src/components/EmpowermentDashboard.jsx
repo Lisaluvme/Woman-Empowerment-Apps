@@ -33,19 +33,18 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
     return () => clearInterval(interval);
   }, [isTimerActive, safetyTimer]);
 
-  // Fetch emergency contact from database
+  // Fetch emergency contact from localStorage
   useEffect(() => {
-    const fetchEmergencyContact = async () => {
+    const fetchEmergencyContact = () => {
       if (user) {
         try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('emergency_contact')
-            .eq('firebase_uid', user.uid)
-            .single();
-
-          if (data && data.emergency_contact?.phone) {
-            setEmergencyContact(data.emergency_contact.phone);
+          const profileKey = `user_profile_${user.uid}`;
+          const data = localStorage.getItem(profileKey);
+          if (data) {
+            const profile = JSON.parse(data);
+            if (profile.emergencyContact) {
+              setEmergencyContact(profile.emergencyContact);
+            }
           }
         } catch (error) {
           console.error('Error fetching emergency contact:', error);

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, supabase } from '../firebase-config';
-import { 
-  User, 
-  Shield, 
-  Bell, 
-  HelpCircle, 
+import { auth } from '../firebase-config';
+import {
+  User,
+  Shield,
+  Bell,
+  HelpCircle,
   ChevronRight,
   LogOut,
   Settings,
@@ -17,6 +17,26 @@ import {
   Check,
   X
 } from 'lucide-react';
+import { vaultStorage } from '../services/googleDriveStorage';
+
+// Helper functions for localStorage
+const getUserProfileKey = (uid) => `user_profile_${uid}`;
+const loadProfileFromStorage = (uid) => {
+  try {
+    const data = localStorage.getItem(getUserProfileKey(uid));
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error('Error loading profile:', e);
+    return null;
+  }
+};
+const saveProfileToStorage = (uid, profile) => {
+  try {
+    localStorage.setItem(getUserProfileKey(uid), JSON.stringify(profile));
+  } catch (e) {
+    console.error('Error saving profile:', e);
+  }
+};
 
 const Profile = ({ onLogout }) => {
   const [user] = useAuthState(auth);
@@ -38,90 +58,39 @@ const Profile = ({ onLogout }) => {
 
     const loadUserData = async () => {
       try {
-        // Load user profile from Supabase
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('firebase_uid', user.uid)
-          .single();
+        // Load user profile from localStorage
+        const storedProfile = loadProfileFromStorage(user.uid);
 
-        if (userData) {
-          setUserProfile({
-            ...userData,
-            displayName: userData.display_name || '',
-            emergencyContact: userData.emergency_contact?.phone || '',
-            notifications: userData.preferences?.notifications ?? true,
-            darkMode: userData.preferences?.theme === 'dark',
-            stats: userData.stats || { points: 0 },
-            createdAt: userData.created_at
-          });
-          setDisplayName(userData.display_name || '');
-          setEmergencyContact(userData.emergency_contact?.phone || '');
-          setNotifications(userData.preferences?.notifications ?? true);
-          setDarkMode(userData.preferences?.theme === 'dark');
+        if (storedProfile) {
+          setUserProfile(storedProfile);
+          setDisplayName(storedProfile.displayName || '');
+          setEmergencyContact(storedProfile.emergencyContact || '');
+          setNotifications(storedProfile.notifications ?? true);
+          setDarkMode(storedProfile.darkMode ?? false);
         } else {
-          // Create default profile in Supabase
+          // Create default profile
           const defaultProfile = {
-            firebase_uid: user.uid,
+            displayName: user.email?.split('@')[0] || 'User',
             email: user.email,
-            display_name: user.email?.split('@')[0] || 'User',
-            emergency_contact: { name: '', phone: '' },
-            preferences: { theme: 'light', notifications: true },
-            stats: { total_points: 0, level: 1, badges: [] }
+            emergencyContact: '',
+            notifications: true,
+            darkMode: false,
+            stats: { points: 0 },
+            createdAt: new Date().toISOString()
           };
-          
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert([defaultProfile]);
-          
-          if (!insertError) {
-            setUserProfile({
-              ...defaultProfile,
-              displayName: defaultProfile.display_name,
-              emergencyContact: '',
-              notifications: true,
-              darkMode: false,
-              stats: { points: 0 },
-              createdAt: new Date()
-            });
-            setDisplayName(defaultProfile.display_name);
-          }
+
+          saveProfileToStorage(user.uid, defaultProfile);
+          setUserProfile(defaultProfile);
+          setDisplayName(defaultProfile.displayName);
+          setEmergencyContact('');
+          setNotifications(true);
+          setDarkMode(false);
         }
 
-        // Count documents from Supabase
-        const { count, error: countError } = await supabase
-          .from('vault_documents')
-          .select('*', { count: 'exact', head: true })
-          .eq('firebase_uid', user.uid);
+        // Count documents from Google Drive Storage
+        const documents = await vaultStorage.getDocuments();
+        setDocumentCount(documents.length);
 
-        if (!countError) {
-          setDocumentCount(count || 0);
-        }
-
-        // Set up real-time subscription for document count
-        const channel = supabase
-          .channel('document_count_changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'vault_documents',
-              filter: `firebase_uid=eq.${user.uid}`
-            },
-            async () => {
-              const { count: newCount } = await supabase
-                .from('vault_documents')
-                .select('*', { count: 'exact', head: true })
-                .eq('firebase_uid', user.uid);
-              setDocumentCount(newCount || 0);
-            }
-          )
-          .subscribe();
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -142,31 +111,18 @@ const Profile = ({ onLogout }) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          display_name: displayName,
-          emergency_contact: { 
-            name: '', 
-            phone: emergencyContact 
-          },
-          preferences: {
-            theme: darkMode ? 'dark' : 'light',
-            notifications: notifications
-          }
-        })
-        .eq('firebase_uid', user.uid);
-
-      if (error) throw error;
-      
-      setUserProfile({
+      const updatedProfile = {
         ...userProfile,
         displayName,
         emergencyContact,
         notifications,
-        darkMode
-      });
-      
+        darkMode,
+        updatedAt: new Date().toISOString()
+      };
+
+      saveProfileToStorage(user.uid, updatedProfile);
+
+      setUserProfile(updatedProfile);
       setEditingProfile(false);
       alert('Profile updated successfully!');
     } catch (error) {
@@ -210,7 +166,15 @@ const Profile = ({ onLogout }) => {
           description: notifications ? 'Enabled' : 'Disabled',
           toggle: true,
           toggleValue: notifications,
-          action: () => setNotifications(!notifications),
+          action: () => {
+            const newValue = !notifications;
+            setNotifications(newValue);
+            if (userProfile) {
+              const updatedProfile = { ...userProfile, notifications: newValue };
+              saveProfileToStorage(user.uid, updatedProfile);
+              setUserProfile(updatedProfile);
+            }
+          },
           color: 'champagne'
         },
         {
@@ -219,7 +183,15 @@ const Profile = ({ onLogout }) => {
           description: darkMode ? 'Enabled' : 'Disabled',
           toggle: true,
           toggleValue: darkMode,
-          action: () => setDarkMode(!darkMode),
+          action: () => {
+            const newValue = !darkMode;
+            setDarkMode(newValue);
+            if (userProfile) {
+              const updatedProfile = { ...userProfile, darkMode: newValue };
+              saveProfileToStorage(user.uid, updatedProfile);
+              setUserProfile(updatedProfile);
+            }
+          },
           color: 'lavender'
         },
         {
@@ -267,85 +239,85 @@ const Profile = ({ onLogout }) => {
           <div className="avatar-glass-lg shadow-2xl">
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
-      <div className="flex-1 min-w-0">
-        <h2 className="text-3xl font-bold mb-1">{displayName || 'Your Account'}</h2>
-        <p className="text-sm text-slate-600">{user?.email || ''}</p>
-      </div>
-      <button
-        onClick={() => setEditingProfile(!editingProfile)}
-        className="p-3 bg-white/50 backdrop-blur-sm rounded-xl hover:bg-white/70 transition-all"
-      >
-        <Edit2 size={20} className="text-slate-700" />
-      </button>
-    </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-3xl font-bold mb-1">{displayName || 'Your Account'}</h2>
+            <p className="text-sm text-slate-600">{user?.email || ''}</p>
+          </div>
+          <button
+            onClick={() => setEditingProfile(!editingProfile)}
+            className="p-3 bg-white/50 backdrop-blur-sm rounded-xl hover:bg-white/70 transition-all"
+          >
+            <Edit2 size={20} className="text-slate-700" />
+          </button>
+        </div>
 
-    {/* Edit Profile Form */}
-    {editingProfile && (
-      <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mb-6 animate-fade-in">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
-            />
+        {/* Edit Profile Form */}
+        {editingProfile && (
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 mt-6 animate-fade-in">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Emergency Contact
+                </label>
+                <input
+                  type="text"
+                  value={emergencyContact}
+                  onChange={(e) => setEmergencyContact(e.target.value)}
+                  placeholder="e.g., 60103899295"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setEditingProfile(false);
+                    setDisplayName(userProfile?.displayName || '');
+                    setEmergencyContact(userProfile?.emergencyContact || '');
+                  }}
+                  className="flex-1 bg-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2"
+                >
+                  <X size={18} />
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProfile}
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 px-4 rounded-xl font-bold hover:from-violet-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Check size={18} />
+                  Save Changes
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Emergency Contact
-            </label>
-            <input
-              type="text"
-              value={emergencyContact}
-              onChange={(e) => setEmergencyContact(e.target.value)}
-              placeholder="e.g., 60103899295"
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-violet-500 focus:outline-none transition-colors bg-white"
-            />
+        )}
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-3 gap-3 mt-6">
+          <div className="card text-center">
+            <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.points || 0}</div>
+            <div className="text-xs text-slate-500 mt-1">Points</div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setEditingProfile(false);
-                setDisplayName(userProfile?.displayName || '');
-                setEmergencyContact(userProfile?.emergencyContact || '');
-              }}
-              className="flex-1 bg-slate-200 text-slate-700 py-3 px-4 rounded-xl font-bold hover:bg-slate-300 transition-colors flex items-center justify-center gap-2"
-            >
-              <X size={18} />
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveProfile}
-              className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600 text-white py-3 px-4 rounded-xl font-bold hover:from-violet-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg"
-            >
-              <Check size={18} />
-              Save Changes
-            </button>
+          <div className="card text-center">
+            <div className="text-2xl font-bold text-blue-600">{documentCount}</div>
+            <div className="text-xs text-slate-500 mt-1">Documents</div>
+          </div>
+          <div className="card text-center">
+            <div className="text-2xl font-bold text-purple-600">{calculateDaysActive()}</div>
+            <div className="text-xs text-slate-500 mt-1">Days Active</div>
           </div>
         </div>
-      </div>
-    )}
-
-    {/* Stats Section */}
-    <div className="grid grid-cols-3 gap-3 mb-6">
-      <div className="card text-center">
-        <div className="text-2xl font-bold text-rose-600">{userProfile?.stats?.total_points || 0}</div>
-        <div className="text-xs text-slate-500 mt-1">Points</div>
-      </div>
-      <div className="card text-center">
-        <div className="text-2xl font-bold text-blue-600">{documentCount}</div>
-        <div className="text-xs text-slate-500 mt-1">Documents</div>
-      </div>
-      <div className="card text-center">
-        <div className="text-2xl font-bold text-purple-600">{calculateDaysActive()}</div>
-        <div className="text-xs text-slate-500 mt-1">Days Active</div>
-      </div>
-    </div>
       </div>
 
       {/* Menu Sections */}
@@ -364,7 +336,7 @@ const Profile = ({ onLogout }) => {
                 <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
                   <item.icon size={20} className="text-slate-600" />
                 </div>
-                
+
                 <div className="flex-1 text-left min-w-0">
                   <p className="font-medium text-slate-900 text-sm">{item.label}</p>
                   <p className="text-xs text-slate-500 truncate">{item.description}</p>

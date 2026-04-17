@@ -1,11 +1,12 @@
 /**
  * Journal Entry Component with Google Calendar Sync
  * Allows users to create journal entries and automatically sync them to Google Calendar
+ * Now uses Google Drive for storage instead of Supabase
  */
 
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Plus, Check, AlertCircle, Clock } from 'lucide-react';
-import { supabase } from '../firebase-config';
+import { journalStorage } from '../services/googleDriveStorage';
 
 const JournalWithCalendar = ({ user, onJournalCreated }) => {
   const [title, setTitle] = useState('');
@@ -46,7 +47,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
   };
 
   /**
-   * Submit journal entry to Supabase
+   * Submit journal entry to Google Drive Storage
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +74,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
     try {
       const entryDateTime = getEntryDateTime();
 
-      // Create journal entry in Supabase
+      // Create journal entry in Google Drive
       const journalData = {
         firebase_uid: user.uid,
         title: title.trim(),
@@ -87,13 +88,7 @@ const JournalWithCalendar = ({ user, onJournalCreated }) => {
         tags: []
       };
 
-      const { data, error } = await supabase
-        .from('journals')
-        .insert([journalData])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await journalStorage.createJournal(journalData);
 
       setMessage({
         type: 'success',

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase-config';
-import api from '../services/api';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Shield, Sparkles, Check } from 'lucide-react';
 
 const Register = () => {
@@ -57,11 +56,19 @@ const Register = () => {
         formData.password
       );
 
-      // Create user profile via API
+      // Create user profile in localStorage
       try {
-        await api.user.updateProfile({
-          displayName: formData.displayName || formData.email.split('@')[0]
-        });
+        const profileKey = `user_profile_${userCredential.user.uid}`;
+        const profile = {
+          displayName: formData.displayName || formData.email.split('@')[0],
+          email: formData.email,
+          emergencyContact: '',
+          notifications: true,
+          darkMode: false,
+          stats: { points: 0 },
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem(profileKey, JSON.stringify(profile));
       } catch (profileError) {
         console.warn('Profile creation warning:', profileError);
         // Continue anyway - account is created

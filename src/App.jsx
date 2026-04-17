@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, supabase } from './firebase-config';
+import { auth } from './firebase-config';
 import MainApp from './components/MainApp';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -18,45 +18,6 @@ function App() {
       setFirebaseError('Firebase authentication failed to initialize. Please check your API key configuration.');
     }
   }, []);
-
-  // Initialize user profile in Supabase on first login
-  useEffect(() => {
-    const initializeUserProfile = async () => {
-      if (user && !loading) {
-        try {
-          // Check if user exists in Supabase
-          const { data: existingUser, error: fetchError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('firebase_uid', user.uid)
-            .single();
-
-          if (!existingUser) {
-            // Create default profile in Supabase
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([{
-                firebase_uid: user.uid,
-                email: user.email,
-                display_name: user.email?.split('@')[0] || 'User',
-                emergency_contact: { name: '', phone: '' },
-                preferences: { theme: 'light', notifications: true },
-                stats: { total_points: 0, level: 1, badges: [] }
-              }]);
-
-            if (!insertError) {
-              console.log('User profile created in Supabase');
-            } else {
-              console.error('Failed to create user profile:', insertError);
-            }
-          }
-        } catch (err) {
-          console.error('Failed to initialize user profile:', err);
-        }
-      }
-    };
-    initializeUserProfile();
-  }, [user, loading]);
 
   // Handle Firebase auth errors
   useEffect(() => {
