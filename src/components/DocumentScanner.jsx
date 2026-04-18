@@ -109,7 +109,7 @@ const DocumentScanner = ({ onSave, onCancel }) => {
 
       // Upload to Google Drive
       console.log('📤 Uploading to Google Drive...');
-      setError('Uploading to Google Drive...');
+      setError('Connecting to Google Drive...');
 
       // Initialize Google services
       await initializeGoogleServices();
@@ -119,25 +119,49 @@ const DocumentScanner = ({ onSave, onCancel }) => {
       if (!isDriveReady()) {
         console.log('🔐 Requesting Google Drive access...');
 
-        // Add timeout to OAuth request
-        const oauthTimeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OAuth timeout')), 10000)
-        );
-
-        await Promise.race([
-          requestGoogleCalendarAccess(),
-          oauthTimeoutPromise
-        ]).catch(() => {
-          throw new Error('OAuth request took too long');
-        });
-
+        // Check for existing token first
         const storedToken = localStorage.getItem('google_calendar_token');
+
         if (storedToken) {
-          setDriveAccessToken(storedToken);
-          console.log('✅ Drive access token set');
+          try {
+            setDriveAccessToken(storedToken);
+            await loadDriveApi();
+            console.log('✅ Drive access token set from storage');
+          } catch (tokenErr) {
+            console.warn('⚠️ Stored token invalid, requesting new access...');
+            // Token is invalid, request new access
+            await requestGoogleCalendarAccess();
+            const newToken = localStorage.getItem('google_calendar_token');
+            if (newToken) {
+              setDriveAccessToken(newToken);
+              await loadDriveApi();
+              console.log('✅ New Drive access token set');
+            }
+          }
+        } else {
+          // No token, request OAuth access with increased timeout
+          const oauthTimeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OAuth request took too long. Please try again.')), 30000)
+          );
+
+          try {
+            await Promise.race([
+              requestGoogleCalendarAccess(),
+              oauthTimeoutPromise
+            ]);
+          } catch (oauthErr) {
+            console.error('❌ OAuth error:', oauthErr);
+            throw oauthErr;
+          }
+
+          const newToken = localStorage.getItem('google_calendar_token');
+          if (newToken) {
+            setDriveAccessToken(newToken);
+            await loadDriveApi();
+            console.log('✅ Drive access token set');
+          }
         }
 
-        await loadDriveApi();
         console.log('✅ Drive API loaded');
       }
 

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase-config';
 import { Search, Plus, Grid, List, Trash2, X, FolderOpen, Loader2, Download, FileText, Image as ImageIcon } from 'lucide-react';
-import { deleteFile, getDownloadUrl, initializeDriveServices, getFileMetadata } from '../services/googleDriveService';
+import { deleteFile, getDownloadUrl, initializeDriveServices, getFileMetadata, isDriveReady, setDriveAccessToken, loadDriveApi } from '../services/googleDriveService';
 import { isImage, isDriveUrl, convertDriveUrl, getFileIcon, getFileExtension } from '../utils/fileTypeUtils';
-import { vaultStorage } from '../services/googleDriveStorage';
+import { vaultStorage, initializeStorage } from '../services/googleDriveStorage';
+import { initializeGoogleServices, requestGoogleCalendarAccess } from '../services/googleCalendarServiceOAuthOnly';
 
 // Placeholder for Google Drive images that can't be directly accessed
 const getPlaceholderForDriveImage = (mimeType) => {
@@ -51,6 +52,38 @@ const VaultGallery = ({ onOpenScanner }) => {
     const fetchDocuments = async () => {
       try {
         console.log('📂 Fetching documents from Google Drive...');
+
+        // Initialize storage if not ready
+        if (!vaultStorage.isReady?.()) {
+          console.log('🔧 Initializing storage...');
+
+          // Check if we have a stored Google token
+          const storedToken = localStorage.getItem('google_calendar_token');
+          if (storedToken) {
+            try {
+              await initializeGoogleServices();
+              await initializeDriveServices();
+
+              if (!isDriveReady()) {
+                console.log('🔐 Requesting Google Drive access...');
+                await requestGoogleCalendarAccess();
+              }
+
+              setDriveAccessToken(storedToken);
+              await loadDriveApi();
+              await initializeStorage(storedToken);
+              console.log('✅ Storage initialized');
+            } catch (initErr) {
+              console.warn('⚠️ Could not initialize storage:', initErr.message);
+            }
+          } else {
+            console.warn('⚠️ No Google token found, showing empty vault');
+            setDocuments([]);
+            setLoading(false);
+            return;
+          }
+        }
+
         const data = await vaultStorage.getDocuments();
         console.log(`✅ Loaded ${data?.length || 0} documents:`, data);
         setDocuments(data || []);
