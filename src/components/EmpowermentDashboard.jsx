@@ -248,17 +248,7 @@ const EmpowermentDashboard = ({ onOpenScanner, onJournalCreated: onJournalCreate
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setEmpowermentPoints(p => p + 100)}
-            className="btn-secondary-glass hover:shadow-md cursor-pointer hover-lift"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" />
-              <span>Add Progress</span>
-            </div>
-          </button>
+        <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
             className="btn-secondary-glass hover:shadow-md cursor-pointer hover-lift"

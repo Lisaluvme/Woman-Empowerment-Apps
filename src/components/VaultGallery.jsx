@@ -235,7 +235,7 @@ const VaultGallery = ({ onOpenScanner }) => {
         {/* Category Filters - Premium horizontal bar */}
         {!isLoading && (
           <div className="mb-6">
-            <div className="flex items-center gap-4 overflow-x-auto overflow-y-hidden pb-2 -mx-5 px-5 snap-x snap-mandatory">
+            <div className="flex items-center gap-3 overflow-x-auto overflow-y-hidden pb-2 -mx-5 px-5 snap-x snap-mandatory scrollbar-hide">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
