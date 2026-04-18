@@ -1,6 +1,6 @@
 // Enhanced Service Worker for Women's Empowerment Command Center PWA
 
-const CACHE_NAME = 'empowerment-app-v6';
+const CACHE_NAME = 'empowerment-app-v7';
 const urlsToCache = [
   '/',
   '/index.html',
